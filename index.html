@@ -715,6 +715,22 @@ body{background:var(--bg);color:var(--ink);font-family:"Public Sans",system-ui,-
 .badge{display:inline-block;padding:1px 7px;border-radius:9px;font-weight:700;font-size:12px;border:2px solid}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 @media (max-width:520px){.panel{width:auto;right:12px}}
+
+.aboutbtn{display:block;width:100%;margin-top:10px;font:inherit;font-size:13px;padding:7px 10px;border:1px solid var(--line);background:transparent;color:var(--accent);border-radius:6px;cursor:pointer;font-weight:600}
+.modal{position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;padding:calc(16px + env(safe-area-inset-top,0px)) 16px calc(16px + env(safe-area-inset-bottom,0px))}
+.modal.open{display:flex}
+.modal .box{background:var(--panel);color:var(--ink);border-radius:12px;max-width:640px;width:100%;max-height:100%;overflow-y:auto;padding:22px 24px;box-shadow:0 8px 30px rgba(0,0,0,.3);position:relative}
+.modal h2{font-size:19px;margin:0 32px 6px 0;line-height:1.3}
+.modal h3{font-size:14.5px;margin:18px 0 6px}
+.modal p,.modal li{font-size:14px;line-height:1.55;margin:0 0 8px}
+.modal ul{padding-left:20px;margin:0 0 8px}
+.modal table{border-collapse:collapse;font-size:13.5px;width:100%;margin:4px 0 8px}
+.modal td,.modal th{border-bottom:1px solid var(--line);padding:5px 8px;text-align:left}
+.modal th{font-weight:700}
+.modal td:last-child,.modal th:last-child{text-align:right;font-variant-numeric:tabular-nums}
+.modal .x{position:absolute;top:12px;right:14px;border:0;background:transparent;font-size:24px;line-height:1;color:var(--muted);cursor:pointer}
+.modal .note{font-size:12.5px;color:var(--muted)}
+.modal .dot{display:inline-block;width:12px;height:12px;border:3px solid;margin-right:6px;vertical-align:-1px}
 </style></head>
 <body>
 <div id="map" role="application" aria-label="Map of suitable plots"></div>
@@ -731,6 +747,40 @@ body{background:var(--bg);color:var(--ink);font-family:"Public Sans",system-ui,-
  <div class="search"><input id="q" placeholder="Find JL_Sh_Plot, e.g. 250_02_977" aria-label="Search plot" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="sugg" aria-autocomplete="list"><ul class="sugg" id="sugg" role="listbox"></ul><button id="go">Go</button></div>
  <div class="row"><label><input type="checkbox" id="lbl" checked> Show labels</label><button class="tog" id="fit" style="background:transparent;color:var(--accent)">Zoom to all</button></div>
  <div class="msg" id="msg"></div>
+ <button class="aboutbtn" id="aboutbtn">About this project</button>
+ </div>
+</div>
+<div class="modal" id="about" role="dialog" aria-modal="true" aria-labelledby="about-title">
+ <div class="box">
+  <button class="x" id="aboutx" aria-label="Close">×</button>
+  <h2 id="about-title">Potential Khas Land for EV Charging Stations – Dhaka City</h2>
+  <p>This map shows the results of screening 726 khas (government-owned) land plots in Dhaka City as potential sites for electric vehicle (EV) charging stations. 49 plots were found suitable and rated High, Medium or Low.</p>
+  <h3>Screening criteria</h3>
+  <p>Each plot was checked manually in ArcGIS against three criteria:</p>
+  <ul>
+   <li><b>Minimum area:</b> at least 4 katha (1 katha = 66.8902 m²). Smaller adjoining plots were kept where together they form a usable site.</li>
+   <li><b>Accessibility:</b> access from a major road.</li>
+   <li><b>Vacancy:</b> vacant or easily cleared; not built up or in restricted use.</li>
+  </ul>
+  <h3>Suitability classes</h3>
+  <table>
+   <tr><th>Class</th><th>Meaning</th><th>Plots</th></tr>
+   <tr><td><span class="dot" style="border-color:#4CE600"></span>High</td><td>Good major-road access; vacant or easy to clear</td><td>11</td></tr>
+   <tr><td><span class="dot" style="border-color:#FFAA00"></span>Medium</td><td>Usable, but weaker access or partly occupied</td><td>17</td></tr>
+   <tr><td><span class="dot" style="border-color:#FF0000"></span>Low</td><td>Poor access, or substantial temporary or restricted use</td><td>21</td></tr>
+  </table>
+  <h3>Why other plots were excluded</h3>
+  <table>
+   <tr><th>Reason</th><th>Plots</th></tr>
+   <tr><td>Under 4 katha</td><td>409</td></tr>
+   <tr><td>Built up (permanent structures)</td><td>144</td></tr>
+   <tr><td>Restricted use</td><td>48</td></tr>
+   <tr><td>Not accessible from a major road</td><td>46</td></tr>
+   <tr><td>Existing road, waterbody, cemetery or park</td><td>29</td></tr>
+   <tr><td>Other</td><td>1</td></tr>
+   <tr><th>Total not suitable</th><th>677</th></tr>
+  </table>
+  <p class="note">Tick “Not suitable” in the legend to see excluded plots. Plot boundaries are from RS mauza maps. Ratings are a first screening and should be verified on the ground.</p>
  </div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
@@ -826,6 +876,13 @@ function find(){const v=qEl.value.trim().toLowerCase();if(!v)return;
 document.getElementById('go').addEventListener('click',find);
 const panel=document.getElementById('panel');
 document.getElementById('collapse').addEventListener('click',e=>{panel.classList.toggle('min');e.target.textContent=panel.classList.contains('min')?'+':'–'});
+const about=document.getElementById('about');
+const openA=()=>{about.classList.add('open');document.getElementById('aboutx').focus()};
+const closeA=()=>{about.classList.remove('open');document.getElementById('aboutbtn').focus()};
+document.getElementById('aboutbtn').addEventListener('click',openA);
+document.getElementById('aboutx').addEventListener('click',closeA);
+about.addEventListener('click',e=>{if(e.target===about)closeA()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&about.classList.contains('open'))closeA()});
 setTimeout(refresh,0);
 </script>
 </body></html>
