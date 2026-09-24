@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Potential Khas Land for EV Charging Stations</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>/* required styles */
+
+.leaflet-pane,
+.leaflet-tile,
+.leaflet-marker-icon,
+.leaflet-marker-shadow,
+.leaflet-tile-container,
+.leaflet-pane > svg,
+.leaflet-pane > canvas,
+.leaflet-zoom-box,
+.leaflet-image-layer,
+.leaflet-layer {
+	position: absolute;
+	left: 0;
+	top: 0;
+	}
+.leaflet-container {
+	overflow: hidden;
+	}
+.leaflet-tile,
+.leaflet-marker-icon,
+.leaflet-marker-shadow {
+	-webkit-user-select: none;
+	   -moz-user-select: none;
+	        user-select: none;
+	  -webkit-user-drag: none;
+	}
+/* Prevents IE11 from highlighting tiles in blue */
+.leaflet-tile::selection {
+	background: transparent;
+}
+/* Safari renders non-retina tile on retina better with this, but Chrome is worse */
+.leaflet-safari .leaflet-tile {
+	image-rendering: -webkit-optimize-contrast;
+	}
+/* hack that prevents hw layers "stretching" when loading new tiles */
+.leaflet-safari .leaflet-tile-container {
+	width: 1600px;
+	height: 1600px;
+	-webkit-transform-origin: 0 0;
+	}
+.leaflet-marker-icon,
+.leaflet-marker-shadow {
+	display: block;
+	}
+/* .leaflet-container svg: reset svg max-width decleration shipped in Joomla! (joomla.org) 3.x */
+/* .leaflet-container img: map is broken in FF if you have max-width: 100% on tiles */
+.leaflet-container .leaflet-overlay-pane svg {
+	max-width: none !important;
+	max-height: none !important;
+	}
+.leaflet-container .leaflet-marker-pane img,
+.leaflet-container .leaflet-shadow-pane img,
+.leaflet-container .leaflet-tile-pane img,
+.leaflet-container img.leaflet-image-layer,
+.leaflet-container .leaflet-tile {
+	max-width: none !important;
+	max-height: none !important;
+	width: auto;
+	padding: 0;
+	}
+
+.leaflet-container img.leaflet-tile {
+	/* See: https://bugs.chromium.org/p/chromium/issues/detail?id=600120 */
+	mix-blend-mode: plus-lighter;
+}
+
+.leaflet-container.leaflet-touch-zoom {
+	-ms-touch-action: pan-x pan-y;
+	touch-action: pan-x pan-y;
+	}
+.leaflet-container.leaflet-touch-drag {
+	-ms-touch-action: pinch-zoom;
+	/* Fallback for FF which doesn't support pinch-zoom */
+	touch-action: none;
+	touch-action: pinch-zoom;
+}
+.leaflet-container.leaflet-touch-drag.leaflet-touch-zoom {
+	-ms-touch-action: none;
+	touch-action: none;
+}
+.leaflet-container {
+	-webkit-tap-highlight-color: transparent;
+}
+.leaflet-container a {
+	-webkit-tap-highlight-color: rgba(51, 181, 229, 0.4);
+}
+.leaflet-tile {
+	filter: inherit;
+	visibility: hidden;
+	}
+.leaflet-tile-loaded {
+	visibility: inherit;
+	}
+.leaflet-zoom-box {
+	width: 0;
+	height: 0;
+	-moz-box-sizing: border-box;
+	     box-sizing: border-box;
+	z-index: 800;
+	}
+/* workaround for https://bugzilla.mozilla.org/show_bug.cgi?id=888319 */
+.leaflet-overlay-pane svg {
+	-moz-user-select: none;
+	}
+
+.leaflet-pane         { z-index: 400; }
+
+.leaflet-tile-pane    { z-index: 200; }
+.leaflet-overlay-pane { z-index: 400; }
+.leaflet-shadow-pane  { z-index: 500; }
+.leaflet-marker-pane  { z-index: 600; }
+.leaflet-tooltip-pane   { z-index: 650; }
+.leaflet-popup-pane   { z-index: 700; }
+
+.leaflet-map-pane canvas { z-index: 100; }
+.leaflet-map-pane svg    { z-index: 200; }
+
+.leaflet-vml-shape {
+	width: 1px;
+	height: 1px;
+	}
+.lvml {
+	behavior: url(#default#VML);
+	display: inline-block;
+	position: absolute;
+	}
+
+
+/* control positioning */
+
+.leaflet-control {
+	position: relative;
+	z-index: 800;
+	pointer-events: visiblePainted; /* IE 9-10 doesn't have auto */
+	pointer-events: auto;
+	}
+.leaflet-top,
+.leaflet-bottom {
+	position: absolute;
+	z-index: 1000;
+	pointer-events: none;
+	}
+.leaflet-top {
+	top: 0;
+	}
+.leaflet-right {
+	right: 0;
+	}
+.leaflet-bottom {
+	bottom: 0;
+	}
+.leaflet-left {
+	left: 0;
+	}
+.leaflet-control {
+	float: left;
+	clear: both;
+	}
+.leaflet-right .leaflet-control {
+	float: right;
+	}
+.leaflet-top .leaflet-control {
+	margin-top: 10px;
+	}
+.leaflet-bottom .leaflet-control {
+	margin-bottom: 10px;
+	}
+.leaflet-left .leaflet-control {
+	margin-left: 10px;
+	}
+.leaflet-right .leaflet-control {
+	margin-right: 10px;
+	}
+
+
+/* zoom and fade animations */
+
+.leaflet-fade-anim .leaflet-popup {
+	opacity: 0;
+	-webkit-transition: opacity 0.2s linear;
+	   -moz-transition: opacity 0.2s linear;
+	        transition: opacity 0.2s linear;
+	}
+.leaflet-fade-anim .leaflet-map-pane .leaflet-popup {
+	opacity: 1;
+	}
+.leaflet-zoom-animated {
+	-webkit-transform-origin: 0 0;
+	    -ms-transform-origin: 0 0;
+	        transform-origin: 0 0;
+	}
+svg.leaflet-zoom-animated {
+	will-change: transform;
+}
+
+.leaflet-zoom-anim .leaflet-zoom-animated {
+	-webkit-transition: -webkit-transform 0.25s cubic-bezier(0,0,0.25,1);
+	   -moz-transition:    -moz-transform 0.25s cubic-bezier(0,0,0.25,1);
+	        transition:         transform 0.25s cubic-bezier(0,0,0.25,1);
+	}
+.leaflet-zoom-anim .leaflet-tile,
+.leaflet-pan-anim .leaflet-tile {
+	-webkit-transition: none;
+	   -moz-transition: none;
+	        transition: none;
+	}
+
+.leaflet-zoom-anim .leaflet-zoom-hide {
+	visibility: hidden;
+	}
+
+
+/* cursors */
+
+.leaflet-interactive {
+	cursor: pointer;
+	}
+.leaflet-grab {
+	cursor: -webkit-grab;
+	cursor:    -moz-grab;
+	cursor:         grab;
+	}
+.leaflet-crosshair,
+.leaflet-crosshair .leaflet-interactive {
+	cursor: crosshair;
+	}
+.leaflet-popup-pane,
+.leaflet-control {
+	cursor: auto;
+	}
+.leaflet-dragging .leaflet-grab,
+.leaflet-dragging .leaflet-grab .leaflet-interactive,
+.leaflet-dragging .leaflet-marker-draggable {
+	cursor: move;
+	cursor: -webkit-grabbing;
+	cursor:    -moz-grabbing;
+	cursor:         grabbing;
+	}
+
+/* marker & overlays interactivity */
+.leaflet-marker-icon,
+.leaflet-marker-shadow,
+.leaflet-image-layer,
+.leaflet-pane > svg path,
+.leaflet-tile-container {
+	pointer-events: none;
+	}
+
+.leaflet-marker-icon.leaflet-interactive,
+.leaflet-image-layer.leaflet-interactive,
+.leaflet-pane > svg path.leaflet-interactive,
+svg.leaflet-image-layer.leaflet-interactive path {
+	pointer-events: visiblePainted; /* IE 9-10 doesn't have auto */
+	pointer-events: auto;
+	}
+
+/* visual tweaks */
+
+.leaflet-container {
+	background: #ddd;
+	outline-offset: 1px;
+	}
+.leaflet-container a {
+	color: #0078A8;
+	}
+.leaflet-zoom-box {
+	border: 2px dotted #38f;
+	background: rgba(255,255,255,0.5);
+	}
+
+
+/* general typography */
+.leaflet-container {
+	font-family: "Helvetica Neue", Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	font-size: 0.75rem;
+	line-height: 1.5;
+	}
+
+
+/* general toolbar styles */
+
+.leaflet-bar {
+	box-shadow: 0 1px 5px rgba(0,0,0,0.65);
+	border-radius: 4px;
+	}
+.leaflet-bar a {
+	background-color: #fff;
+	border-bottom: 1px solid #ccc;
+	width: 26px;
+	height: 26px;
+	line-height: 26px;
+	display: block;
+	text-align: center;
+	text-decoration: none;
+	color: black;
+	}
+.leaflet-bar a,
+.leaflet-control-layers-toggle {
+	background-position: 50% 50%;
+	background-repeat: no-repeat;
+	display: block;
+	}
+.leaflet-bar a:hover,
+.leaflet-bar a:focus {
+	background-color: #f4f4f4;
+	}
+.leaflet-bar a:first-child {
+	border-top-left-radius: 4px;
+	border-top-right-radius: 4px;
+	}
+.leaflet-bar a:last-child {
+	border-bottom-left-radius: 4px;
+	border-bottom-right-radius: 4px;
+	border-bottom: none;
+	}
+.leaflet-bar a.leaflet-disabled {
+	cursor: default;
+	background-color: #f4f4f4;
+	color: #bbb;
+	}
+
+.leaflet-touch .leaflet-bar a {
+	width: 30px;
+	height: 30px;
+	line-height: 30px;
+	}
+.leaflet-touch .leaflet-bar a:first-child {
+	border-top-left-radius: 2px;
+	border-top-right-radius: 2px;
+	}
+.leaflet-touch .leaflet-bar a:last-child {
+	border-bottom-left-radius: 2px;
+	border-bottom-right-radius: 2px;
+	}
+
+/* zoom control */
+
+.leaflet-control-zoom-in,
+.leaflet-control-zoom-out {
+	font: bold 18px 'Lucida Console', Monaco, monospace;
+	text-indent: 1px;
+	}
+
+.leaflet-touch .leaflet-control-zoom-in, .leaflet-touch .leaflet-control-zoom-out  {
+	font-size: 22px;
+	}
+
+
+/* layers control */
+
+.leaflet-control-layers {
+	box-shadow: 0 1px 5px rgba(0,0,0,0.4);
+	background: #fff;
+	border-radius: 5px;
+	}
+.leaflet-control-layers-toggle {
+	background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABoAAAAaCAQAAAADQ4RFAAACf0lEQVR4AY1UM3gkARTePdvdoTxXKc+qTl3aU5U6b2Kbkz3Gtq3Zw6ziLGNPzrYx7946Tr6/ee/XeCQ4D3ykPtL5tHno4n0d/h3+xfuWHGLX81cn7r0iTNzjr7LrlxCqPtkbTQEHeqOrTy4Yyt3VCi/IOB0v7rVC7q45Q3Gr5K6jt+3Gl5nCoDD4MtO+j96Wu8atmhGqcNGHObuf8OM/x3AMx38+4Z2sPqzCxRFK2aF2e5Jol56XTLyggAMTL56XOMoS1W4pOyjUcGGQdZxU6qRh7B9Zp+PfpOFlqt0zyDZckPi1ttmIp03jX8gyJ8a/PG2yutpS/Vol7peZIbZcKBAEEheEIAgFbDkz5H6Zrkm2hVWGiXKiF4Ycw0RWKdtC16Q7qe3X4iOMxruonzegJzWaXFrU9utOSsLUmrc0YjeWYjCW4PDMADElpJSSQ0vQvA1Tm6/JlKnqFs1EGyZiFCqnRZTEJJJiKRYzVYzJck2Rm6P4iH+cmSY0YzimYa8l0EtTODFWhcMIMVqdsI2uiTvKmTisIDHJ3od5GILVhBCarCfVRmo4uTjkhrhzkiBV7SsaqS+TzrzM1qpGGUFt28pIySQHR6h7F6KSwGWm97ay+Z+ZqMcEjEWebE7wxCSQwpkhJqoZA5ivCdZDjJepuJ9IQjGGUmuXJdBFUygxVqVsxFsLMbDe8ZbDYVCGKxs+W080max1hFCarCfV+C1KATwcnvE9gRRuMP2prdbWGowm1KB1y+zwMMENkM755cJ2yPDtqhTI6ED1M/82yIDtC/4j4BijjeObflpO9I9MwXTCsSX8jWAFeHr05WoLTJ5G8IQVS/7vwR6ohirYM7f6HzYpogfS3R2OAAAAAElFTkSuQmCC);
+	width: 36px;
+	height: 36px;
+	}
+.leaflet-retina .leaflet-control-layers-toggle {
+	background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADQAAAA0CAQAAABvcdNgAAAEsklEQVR4AWL4TydIhpZK1kpWOlg0w3ZXP6D2soBtG42jeI6ZmQTHzAxiTbSJsYLjO9HhP+WOmcuhciVnmHVQcJnp7DFvScowZorad/+V/fVzMdMT2g9Cv9guXGv/7pYOrXh2U+RRR3dSd9JRx6bIFc/ekqHI29JC6pJ5ZEh1yWkhkbcFeSjxgx3L2m1cb1C7bceyxA+CNjT/Ifff+/kDk2u/w/33/IeCMOSaWZ4glosqT3DNnNZQ7Cs58/3Ce5HL78iZH/vKVIaYlqzfdLu8Vi7dnvUbEza5Idt36tquZFldl6N5Z/POLof0XLK61mZCmJSWjVF9tEjUluu74IUXvgttuVIHE7YxSkaYhJZam7yiM9Pv82JYfl9nptxZaxMJE4YSPty+vF0+Y2up9d3wwijfjZbabqm/3bZ9ecKHsiGmRflnn1MW4pjHf9oLufyn2z3y1D6n8g8TZhxyzipLNPnAUpsOiuWimg52psrTZYnOWYNDTMuWBWa0tJb4rgq1UvmutpaYEbZlwU3CLJm/ayYjHW5/h7xWLn9Hh1vepDkyf7dE7MtT5LR4e7yYpHrkhOUpEfssBLq2pPhAqoSWKUkk7EDqkmK6RrCEzqDjhNDWNE+XSMvkJRDWlZTmCW0l0PHQGRZY5t1L83kT0Y3l2SItk5JAWHl2dCOBm+fPu3fo5/3v61RMCO9Jx2EEYYhb0rmNQMX/vm7gqOEJLcXTGw3CAuRNeyaPWwjR8PRqKQ1PDA/dpv+on9Shox52WFnx0KY8onHayrJzm87i5h9xGw/tfkev0jGsQizqezUKjk12hBMKJ4kbCqGPVNXudyyrShovGw5CgxsRICxF6aRmSjlBnHRzg7Gx8fKqEubI2rahQYdR1YgDIRQO7JvQyD52hoIQx0mxa0ODtW2Iozn1le2iIRdzwWewedyZzewidueOGqlsn1MvcnQpuVwLGG3/IR1hIKxCjelIDZ8ldqWz25jWAsnldEnK0Zxro19TGVb2ffIZEsIO89EIEDvKMPrzmBOQcKQ+rroye6NgRRxqR4U8EAkz0CL6uSGOm6KQCdWjvjRiSP1BPalCRS5iQYiEIvxuBMJEWgzSoHADcVMuN7IuqqTeyUPq22qFimFtxDyBBJEwNyt6TM88blFHao/6tWWhuuOM4SAK4EI4QmFHA+SEyWlp4EQoJ13cYGzMu7yszEIBOm2rVmHUNqwAIQabISNMRstmdhNWcFLsSm+0tjJH1MdRxO5Nx0WDMhCtgD6OKgZeljJqJKc9po8juskR9XN0Y1lZ3mWjLR9JCO1jRDMd0fpYC2VnvjBSEFg7wBENc0R9HFlb0xvF1+TBEpF68d+DHR6IOWVv2BECtxo46hOFUBd/APU57WIoEwJhIi2CdpyZX0m93BZicktMj1AS9dClteUFAUNUIEygRZCtik5zSxI9MubTBH1GOiHsiLJ3OCoSZkILa9PxiN0EbvhsAo8tdAf9Seepd36lGWHmtNANTv5Jd0z4QYyeo/UEJqxKRpg5LZx6btLPsOaEmdMyxYdlc8LMaJnikDlhclqmPiQnTEpLUIZEwkRagjYkEibQErwhkTAKCLQEbUgkzJQWc/0PstHHcfEdQ+UAAAAASUVORK5CYII=);
+	background-size: 26px 26px;
+	}
+.leaflet-touch .leaflet-control-layers-toggle {
+	width: 44px;
+	height: 44px;
+	}
+.leaflet-control-layers .leaflet-control-layers-list,
+.leaflet-control-layers-expanded .leaflet-control-layers-toggle {
+	display: none;
+	}
+.leaflet-control-layers-expanded .leaflet-control-layers-list {
+	display: block;
+	position: relative;
+	}
+.leaflet-control-layers-expanded {
+	padding: 6px 10px 6px 6px;
+	color: #333;
+	background: #fff;
+	}
+.leaflet-control-layers-scrollbar {
+	overflow-y: scroll;
+	overflow-x: hidden;
+	padding-right: 5px;
+	}
+.leaflet-control-layers-selector {
+	margin-top: 2px;
+	position: relative;
+	top: 1px;
+	}
+.leaflet-control-layers label {
+	display: block;
+	font-size: 13px;
+	font-size: 1.08333em;
+	}
+.leaflet-control-layers-separator {
+	height: 0;
+	border-top: 1px solid #ddd;
+	margin: 5px -10px 5px -6px;
+	}
+
+/* Default icon URLs */
+.leaflet-default-icon-path { /* used only in path-guessing heuristic, see L.Icon.Default */
+	background-image: url(images/marker-icon.png);
+	}
+
+
+/* attribution and scale controls */
+
+.leaflet-container .leaflet-control-attribution {
+	background: #fff;
+	background: rgba(255, 255, 255, 0.8);
+	margin: 0;
+	}
+.leaflet-control-attribution,
+.leaflet-control-scale-line {
+	padding: 0 5px;
+	color: #333;
+	line-height: 1.4;
+	}
+.leaflet-control-attribution a {
+	text-decoration: none;
+	}
+.leaflet-control-attribution a:hover,
+.leaflet-control-attribution a:focus {
+	text-decoration: underline;
+	}
+.leaflet-attribution-flag {
+	display: inline !important;
+	vertical-align: baseline !important;
+	width: 1em;
+	height: 0.6669em;
+	}
+.leaflet-left .leaflet-control-scale {
+	margin-left: 5px;
+	}
+.leaflet-bottom .leaflet-control-scale {
+	margin-bottom: 5px;
+	}
+.leaflet-control-scale-line {
+	border: 2px solid #777;
+	border-top: none;
+	line-height: 1.1;
+	padding: 2px 5px 1px;
+	white-space: nowrap;
+	-moz-box-sizing: border-box;
+	     box-sizing: border-box;
+	background: rgba(255, 255, 255, 0.8);
+	text-shadow: 1px 1px #fff;
+	}
+.leaflet-control-scale-line:not(:first-child) {
+	border-top: 2px solid #777;
+	border-bottom: none;
+	margin-top: -2px;
+	}
+.leaflet-control-scale-line:not(:first-child):not(:last-child) {
+	border-bottom: 2px solid #777;
+	}
+
+.leaflet-touch .leaflet-control-attribution,
+.leaflet-touch .leaflet-control-layers,
+.leaflet-touch .leaflet-bar {
+	box-shadow: none;
+	}
+.leaflet-touch .leaflet-control-layers,
+.leaflet-touch .leaflet-bar {
+	border: 2px solid rgba(0,0,0,0.2);
+	background-clip: padding-box;
+	}
+
+
+/* popup */
+
+.leaflet-popup {
+	position: absolute;
+	text-align: center;
+	margin-bottom: 20px;
+	}
+.leaflet-popup-content-wrapper {
+	padding: 1px;
+	text-align: left;
+	border-radius: 12px;
+	}
+.leaflet-popup-content {
+	margin: 13px 24px 13px 20px;
+	line-height: 1.3;
+	font-size: 13px;
+	font-size: 1.08333em;
+	min-height: 1px;
+	}
+.leaflet-popup-content p {
+	margin: 17px 0;
+	margin: 1.3em 0;
+	}
+.leaflet-popup-tip-container {
+	width: 40px;
+	height: 20px;
+	position: absolute;
+	left: 50%;
+	margin-top: -1px;
+	margin-left: -20px;
+	overflow: hidden;
+	pointer-events: none;
+	}
+.leaflet-popup-tip {
+	width: 17px;
+	height: 17px;
+	padding: 1px;
+
+	margin: -10px auto 0;
+	pointer-events: auto;
+
+	-webkit-transform: rotate(45deg);
+	   -moz-transform: rotate(45deg);
+	    -ms-transform: rotate(45deg);
+	        transform: rotate(45deg);
+	}
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip {
+	background: white;
+	color: #333;
+	box-shadow: 0 3px 14px rgba(0,0,0,0.4);
+	}
+.leaflet-container a.leaflet-popup-close-button {
+	position: absolute;
+	top: 0;
+	right: 0;
+	border: none;
+	text-align: center;
+	width: 24px;
+	height: 24px;
+	font: 16px/24px Tahoma, Verdana, sans-serif;
+	color: #757575;
+	text-decoration: none;
+	background: transparent;
+	}
+.leaflet-container a.leaflet-popup-close-button:hover,
+.leaflet-container a.leaflet-popup-close-button:focus {
+	color: #585858;
+	}
+.leaflet-popup-scrolled {
+	overflow: auto;
+	}
+
+.leaflet-oldie .leaflet-popup-content-wrapper {
+	-ms-zoom: 1;
+	}
+.leaflet-oldie .leaflet-popup-tip {
+	width: 24px;
+	margin: 0 auto;
+
+	-ms-filter: "progid:DXImageTransform.Microsoft.Matrix(M11=0.70710678, M12=0.70710678, M21=-0.70710678, M22=0.70710678)";
+	filter: progid:DXImageTransform.Microsoft.Matrix(M11=0.70710678, M12=0.70710678, M21=-0.70710678, M22=0.70710678);
+	}
+
+.leaflet-oldie .leaflet-control-zoom,
+.leaflet-oldie .leaflet-control-layers,
+.leaflet-oldie .leaflet-popup-content-wrapper,
+.leaflet-oldie .leaflet-popup-tip {
+	border: 1px solid #999;
+	}
+
+
+/* div icon */
+
+.leaflet-div-icon {
+	background: #fff;
+	border: 1px solid #666;
+	}
+
+
+/* Tooltip */
+/* Base styles for the element that has a tooltip */
+.leaflet-tooltip {
+	position: absolute;
+	padding: 6px;
+	background-color: #fff;
+	border: 1px solid #fff;
+	border-radius: 3px;
+	color: #222;
+	white-space: nowrap;
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
+	pointer-events: none;
+	box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+	}
+.leaflet-tooltip.leaflet-interactive {
+	cursor: pointer;
+	pointer-events: auto;
+	}
+.leaflet-tooltip-top:before,
+.leaflet-tooltip-bottom:before,
+.leaflet-tooltip-left:before,
+.leaflet-tooltip-right:before {
+	position: absolute;
+	pointer-events: none;
+	border: 6px solid transparent;
+	background: transparent;
+	content: "";
+	}
+
+/* Directions */
+
+.leaflet-tooltip-bottom {
+	margin-top: 6px;
+}
+.leaflet-tooltip-top {
+	margin-top: -6px;
+}
+.leaflet-tooltip-bottom:before,
+.leaflet-tooltip-top:before {
+	left: 50%;
+	margin-left: -6px;
+	}
+.leaflet-tooltip-top:before {
+	bottom: 0;
+	margin-bottom: -12px;
+	border-top-color: #fff;
+	}
+.leaflet-tooltip-bottom:before {
+	top: 0;
+	margin-top: -12px;
+	margin-left: -6px;
+	border-bottom-color: #fff;
+	}
+.leaflet-tooltip-left {
+	margin-left: -6px;
+}
+.leaflet-tooltip-right {
+	margin-left: 6px;
+}
+.leaflet-tooltip-left:before,
+.leaflet-tooltip-right:before {
+	top: 50%;
+	margin-top: -6px;
+	}
+.leaflet-tooltip-left:before {
+	right: 0;
+	margin-right: -12px;
+	border-left-color: #fff;
+	}
+.leaflet-tooltip-right:before {
+	left: 0;
+	margin-left: -12px;
+	border-right-color: #fff;
+	}
+
+/* Printing */
+
+@media print {
+	/* Prevent printers from removing background-images of controls. */
+	.leaflet-control {
+		-webkit-print-color-adjust: exact;
+		print-color-adjust: exact;
+		}
+	}
+</style>
+<style>
+:root{--bg:#e9edf0;--panel:#ffffff;--ink:#1d2a33;--muted:#5b6b76;--line:#d5dde2;--accent:#0f6b5c;--high:#4CE600;--med:#FFAA00;--low:#FF0000;
+ box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1a2126;--panel:#232c32;--ink:#e6ecef;--muted:#9fb0ba;--line:#34414a;--accent:#5fc7b1}}
+:root[data-theme="dark"]{--bg:#1a2126;--panel:#232c32;--ink:#e6ecef;--muted:#9fb0ba;--line:#34414a;--accent:#5fc7b1}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);font-family:"Public Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+#map{position:absolute;inset:0;background:var(--bg)}
+.panel{position:absolute;z-index:1000;top:calc(12px + env(safe-area-inset-top,0px));left:12px;width:280px;max-width:calc(100% - 24px);
+ background:var(--panel);border:1px solid var(--line);border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,.18);padding:14px 16px}
+.panel h1{font-size:16px;line-height:1.3;margin:0 0 2px;font-weight:700}
+.panel .sub{font-size:12.5px;color:var(--muted);margin:0 0 12px}
+.legend-title{font-size:13px;font-weight:700;margin:0 0 6px}
+.leg{display:flex;align-items:center;gap:10px;font-size:14px;padding:4px 2px;cursor:pointer;user-select:none;border-radius:6px}
+.leg:hover{background:rgba(127,127,127,.1)}
+.leg input{margin:0;accent-color:var(--accent)}
+.sw{width:22px;height:15px;border:3px solid;background:transparent;flex:none}
+.leg .n{margin-left:auto;color:var(--muted);font-variant-numeric:tabular-nums;font-size:13px}
+.search{margin-top:12px;display:flex;gap:6px}
+.search input{flex:1;min-width:0;font:inherit;font-size:13.5px;padding:7px 9px;border:1px solid var(--line);border-radius:6px;background:transparent;color:var(--ink)}
+.search button,.tog{font:inherit;font-size:13px;padding:7px 10px;border:1px solid var(--accent);background:var(--accent);color:#fff;border-radius:6px;cursor:pointer}
+.row{display:flex;align-items:center;justify-content:space-between;margin-top:10px;font-size:13px}
+.row label{display:flex;gap:6px;align-items:center;cursor:pointer}
+.msg{font-size:12px;color:var(--muted);margin-top:8px;min-height:1em}
+.collapse{position:absolute;top:10px;right:10px;border:0;background:transparent;color:var(--muted);font-size:18px;cursor:pointer;line-height:1}
+.panel.min .body{display:none}.panel.min h1{margin-right:24px}
+.plot-label{background:transparent;border:0;box-shadow:none;padding:0;font-weight:700;font-size:12px;color:#111;
+ text-shadow:0 0 3px #fff,0 0 3px #fff,0 0 2px #fff,0 0 1px #fff;white-space:nowrap}
+.plot-label::before{display:none}
+.sat .plot-label{color:#fff;text-shadow:0 0 3px #000,0 0 3px #000,0 0 2px #000}
+.leaflet-popup-content{margin:10px 12px;font-family:inherit}
+.pop h3{margin:0 0 6px;font-size:14px}
+.pop table{border-collapse:collapse;font-size:12.5px}
+.pop td{padding:2px 8px 2px 0;vertical-align:top}.pop td:first-child{color:#5b6b76}
+.badge{display:inline-block;padding:1px 7px;border-radius:9px;font-weight:700;font-size:12px;border:2px solid}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@media (max-width:520px){.panel{width:auto;right:12px}}
+</style></head>
+<body>
+<div id="map" role="application" aria-label="Map of suitable plots"></div>
+<div class="panel" id="panel">
+ <button class="collapse" id="collapse" aria-label="Collapse panel">–</button>
+ <h1>Potential Khas Land for EV Charging Stations</h1>
+ <div class="body">
+ <p class="sub">Dhaka · <span id="total"></span> candidate plots · tap a plot for details</p>
+ <p class="legend-title">Suitability</p>
+ <label class="leg"><input type="checkbox" data-s="High" checked><span class="sw" style="border-color:var(--high)"></span>High<span class="n" id="n-High"></span></label>
+ <label class="leg"><input type="checkbox" data-s="Medium" checked><span class="sw" style="border-color:var(--med)"></span>Medium<span class="n" id="n-Medium"></span></label>
+ <label class="leg"><input type="checkbox" data-s="Low" checked><span class="sw" style="border-color:var(--low)"></span>Low<span class="n" id="n-Low"></span></label>
+ <div class="search"><input id="q" placeholder="Find JL_Sh_Plot, e.g. 250_02_977" aria-label="Search plot"><button id="go">Go</button></div>
+ <div class="row"><label><input type="checkbox" id="lbl" checked> Show labels</label><button class="tog" id="fit" style="background:transparent;color:var(--accent)">Zoom to all</button></div>
+ <div class="msg" id="msg"></div>
+ </div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+const DATA={"type":"FeatureCollection","features":[{"type":"Feature","properties":{"FID":"0","M_District":"Dhaka","Upazila_PS":"Savar Upazila","M_Thana":"Savar","M_U_P_CC":"Aminbazar Union","M_Ward":"Aminbazar Union","Mauza":"Bara Bardeshi","JL_No":"250","Sheet_No":"02","Plot_No":"977","M_JL_S":"Bara_Bardeshi_250_02","JL_Sh_Plot":"250_02_977","Mz_Ver":"RS","Plot_Type":"Plot","Area_katha":"8.81011","Remarks_1":"","Cur_Use":"Vacant","Suit":"Medium"},"geometry":{"type":"MultiPolygon","coordinates":[[[[90.3324592,23.7839394],[90.3324323,23.7839526],[90.3324205,23.7839464],[90.3323148,23.7839106],[90.3323049,23.7839059],[90.3322324,23.7838724],[90.3322225,23.7838685],[90.3321346,23.7838341],[90.3321277,23.7838137],[90.3321194,23.783789],[90.3321196,23.783749],[90.3321198,23.7837201],[90.3321513,23.7836465],[90.3321644,23.7835976],[90.3321749,23.7835967],[90.3323272,23.7835947],[90.3324003,23.7835833],[90.3324019,23.7836329],[90.3324192,23.7837493],[90.3324523,23.7838135],[90.3324934,23.7838469],[90.3325553,23.7838565],[90.3326328,23.7838591],[90.3326364,23.783863],[90.3325447,23.783904],[90.3324592,23.7839394]]]]}},{"type":"Feature","properties":{"FID":"1","M_District":"Dhaka","Upazila_PS":"Dhanmondi Thana","M_Thana":"Dhanmondi","M_U_P_CC":"Dhaka South City Corporation","M_Ward":"DSCC_Ward-15","Mauza":"Dhanmondi","JL_No":"010","Sheet_No":"24","Plot_No":"2397","M_JL_S":"Dhanmondi_010_24","JL_Sh_Plot":"010_24_2397","Mz_Ver":"RS","Plot_Type":"Plot","Area_katha":"11.0388","Remarks_1":"","Cur_Use":"Partially Vacant","Suit":"Low"},"geometry":{"type":"MultiPolygon","coordinates":[[[[90.3800567,23.7448124],[90.3800499,23.744861],[90.3799792,23.7448585],[90.3799047,23.744858],[90.3798302,23.744856],[90.3798215,23.7447937],[90.3798168,23.7447418],[90.3798068,23.7446539],[90.3797928,23.7445497],[90.3797894,23.7445179],[90.3797781,23.7444312],[90.3798264,23.7443912],[90.3799913,23.7444048],[90.380099,23.7444144],[90.3800925,23.7444689],[90.3800822,23.7445657],[90.3800716,23.744646],[90.3800697,23.7446628],[90.3800631,23.7447467],[90.3800567,23.7448124]]]]}},{"type":"Feature","properties":{"FID":"2","M_District":"Dhaka","Upazila_PS":"Dhanmondi Thana","M_Thana":"Dhanmondi","M_U_P_CC":"Dhaka South City Corporation","M_Ward":"DSCC_Ward-15","Mauza":"Dhanmondi","JL_No":"010","Sheet_No":"24","Plot_No":"2408","M_JL_S":"Dhanmondi_010_24","JL_Sh_Plot":"010_24_2408","Mz_Ver":"RS","Plot_Type":"Plot","Area_katha":"10.5605","Remarks_1":"","Cur_Use":"Temporary Structures","Suit":"Medium"},"geometry":{"type":"MultiPolygon","coordinates":[[[[90.3813276,23.7451165],[90.3813275,23.745117],[90.381285,23.745106],[90.3812352,23.7450963],[90.381215,23.7450924],[90.3811306,23.7450753],[90.3810628,23.7450577],[90.3810613,23.7450575],[90.381077,23.744991],[90.3810789,23.7449808],[90.3810815,23.7449737],[90.3810857,23.7449477],[90.3810959,23.7449029],[90.3811015,23.7448866],[90.3811046,23.7448724],[90.3811181,23.7448135],[90.3811209,23.744798],[90.3811374,23.7447308],[90.3811562,23.7446598],[90.3811583,23.7446519],[90.3811622,23.7446315],[90.3811706,23.7446331],[90.3812699,23.7446544],[90.3813274,23.7446647],[90.3814187,23.7446859],[90.3814213,23.7446867],[90.3814188,23.7446984],[90.3814116,23.7447261],[90.3814081,23.7447451],[90.3813952,23.7448019],[90.3813936,23.7448135],[90.38138,23.7448776],[90.381376,23.7448937],[90.3813613,23.7449531],[90.3813506,23.7449938],[90.3813435,23.7450278],[90.3813386,23.745061],[90.3813276,23.7451165]]]]}},{"type":"Feature","properties":{"FID":"3","M_District":"Dhaka","Upazila_PS":"Dhanmondi Thana","M_Thana":"Dhanmondi","M_U_P_CC":"Dhaka South City Corporation","M_Ward":"DSCC_Ward-16","Mauza":"Dhanmondi","JL_No":"011","Sheet_No":"09","Plot_No":"2820","M_JL_S":"Dhanmondi_011_09","JL_Sh_Plot":"011_09_2820","Mz_Ver":"RS","Plot_Type":"Plot","Area_katha":"9.07876","Remarks_1":"","Cur_Use":"Temporary Structures","Suit":"High"},"geometry":{"type":"MultiPolygon","coordinates":[[[[90.3922925,23.7482518],[90.3922493,23.7482569],[90.3922464,23.7482287],[90.3922457,23.7481548],[90.3922575,23.7481482],[90.3922747,23.748128],[90.3922827,23.7481151],[90.3922808,23.7480704],[90.3922746,23.7480069],[90.3923886,23.7479766],[90.3924592,23.7479579],[90.3925639,23.7479318],[90.3926978,23.7479022],[90.3927321,23.7480059],[90.3927443,23.7480463],[90.3927217,23.7480536],[90.3926896,23.7480698],[90.3926465,23.7480898],[90.3925734,23.7481225],[90.3925637,23.7481342],[90.3925296,23.7481695],[90.3924926,23.7482024],[90.392475,23.7482106],[90.3924538,23.7482146],[90.3924275,23.7482163],[90.392411,23.7482189],[90.3923654,23.7482347],[90.3922925,23.7482518]]]]}},{"type":"Feature","properties":{"FID":"4","M_District":"Dhaka","Upazila_PS":"Dhanmondi Thana","M_Thana":"Dhanmondi","M_U_P_CC":"Dhaka South City Corporation","M_Ward":"DSCC_Ward-18","Mauza":"Dhanmondi","JL_No":"011","Sheet_No":"25","Plot_No":"5326","M_JL_S":"Dhanmondi_011_25","JL_Sh_Plot":"011_25_5326","Mz_Ver":"RS","Plot_Type":"Plot","Area_katha":"4.0201","Remarks_1":"","Cur_Use":"Vacant","Suit":"Low"},"geometry":{"type":"MultiPolygon","coordinates":[[[[90.3861329,23.7355453],[90.3861276,23.7355553],[90.3861016,23.7355374],[90.3860377,23.7354898],[90.3859931,23.7354572],[90.3859572,23.7354296],[90.3859131,23.7354002],[90.3858918,23.7353838],[90.3859048,23.735361],[90.3859104,23.7353458],[90.3859233,23.7353257],[90.3859403,23.7352953],[90.3859546,23.73527],[90.3859683,23.7352476],[90.3859891,23.7352655],[90.386038,23.7352975],[90.3861019,23.7353465],[90.3861309,23.7353686],[90.3861831,23.7354064],[90.3862017,23.7354194],[90.386194,23.7354378],[90.3861813,23.7354589],[90.386171,23.7354771],[90.3861567,23.735504],[90.3861428,23.7355284],[90.3861329,23.7355453]]]]}},{"type":"Feature","properties":{"FID":"5","M_District":"Dhaka","Upazila_PS":"Dhanmondi Thana","M_Thana":"Dhanmondi","M_U_P_CC":"Dhaka South City Corporation","M_Ward":"DSCC_Ward-18","Mauza":"Dhanmondi","JL_No":"011","Sheet_No":"25","Plot_No":"5327","M_JL_S":"Dhanmondi_011_25","JL_Sh_Plot":"011_25_5327","Mz_Ver":"RS","Plot_Type":"Plot","Area_katha":"4.11649","Remarks_1":"","Cur_Use":"Vacant","Suit":"Low"},"geometry":{"type":"MultiPolygon","coordinates":[[[[90.3860457,23.7356806],[90.3860405,23.7356881],[90.3860119,23.7356694],[90.3859849,23.7356482],[90.3859413,23.7356147],[90.3859086,23.7355895],[90.3858781,23.7355687],[90.3858463,23.7355447],[90.3858233,23.7355282],[90.38581,23.7355147],[90.3858227,23.7354922],[90.3858408,23.7354633],[90.3858604,23.7354292],[90.3858702,23.735414],[90.3858889,23.7353867],[90.3858918,23.7353838],[90.3859131,23.7354002],[90.3859572,23.7354296],[90.3859931,23.7354572],[90.3860377,23.7354898],[90.3861016,23.7355374],[90.3861276,23.7355553],[90.3861222,23.7355653],[90.3861166,23.7355769],[90.3861151,23.7355786],[90.3861065,23.7355892],[90.3860983,23.735603],[90.3860821,23.7356258],[90.3860749,23.7356361],[90.3860644,23.73565],[90.3860548,23.735665],[90.3860457,23.7356806]]]]}},{"type":"Feature","properties":{"FID":"6","M_District":"Dhaka","Upazila_PS":"Dhanmondi Thana","M_Thana":"Dhanmondi","M_U_P_CC":"Dhaka South City Corporation","M_Ward":"DSCC_Ward-18","Mauza":"Dhanmondi","JL_No":"011","Sheet_No":"27","Plot_No":"5756","M_JL_S":"Dhanmondi_011_27","JL_Sh_Plot":"011_27_5756","Mz_Ver":"RS","Plot_Type":"Plot","Area_katha":"17.5686","Remarks_1":"","Cur_Use":"Waterbody and Vegetation","Suit":"Medium"},"geometry":{"type":"MultiPolygon","coordinates":[[[[90.3890333,23.7360704],[90.389023,23.7360908],[90.3890104,23.7360849],[90.3889799,23.7360672],[90.3889445,23.7360455],[90.3889167,23.736031],[90.3888729,23.7360054],[90.3888384,23.7359853],[90.3887869,23.7359561],[90.388729,23.735923],[90.3886726,23.7358923],[90.3886284,23.7358663],[90.3886055,23.7358517],[90.3885743,23.735834],[90.3885539,23.7358226],[90.3885362,23.7358139],[90.3885177,23.7358001],[90.3884899,23.7357843],[90.3884498,23.7357631],[90.388422,23.7357457],[90.388392,23.7357256],[90.3883657,23.7357095],[90.3883506,23.7356992],[90.3883264,23.735683],[90.3883016,23.735668],[90.3882777,23.7356531],[90.3882475,23.7356326],[90.3882059,23.7356077],[90.3882229,23.7355926],[90.3882463,23.735567],[90.388249,23.7355656],[90.388291,23.7355226],[90.3883569,23.7354521],[90.3883829,23.7354278],[90.3884197,23.735392],[90.3884455,23.7353624],[90.3884682,23.7353369],[90.3885091,23.7353871],[90.3885437,23.7354312],[90.3885629,23.7354563],[90.388598,23.735497],[90.3886297,23.7355376],[90.3886924,23.7356148],[90.3887211,23.7356505],[90.3887712,23.7357122],[90.388828,23.7357844],[90.388865,23.7358321],[90.3888978,23.7358747],[90.3889252,23.7359058],[90.3889689,23.7359585],[90.3889856,23.735976],[90.3890051,23.7360026],[90.3890414,23.736045],[90.3890333,23.7360704]]]]}},{"type":"Feature","properties":{"FID":"7","M_District":"Dhaka","Upazila_PS":"Dhanmondi Thana","M_Thana":"Dhanmondi","M_U_P_CC":"Dhaka South City Corporation","M_Ward":"DSCC_Ward-18","Mauza":"Dhanmondi","JL_No":"011","Sheet_No":"28","Plot_No":"5814","M_JL_S":"Dhanmondi_011_28","JL_Sh_Plot":"011_28_5814","Mz_Ver":"RS","Plot_Type":"Plot","Area_katha":"8.51696","Remarks_1":"","Cur_Use":"Partial Vegetation","Suit":"Medium"},"geometry":{"type":"MultiPolygon","coordinates":[[[[90.3861195,23.7344247],[90.386092,23.7344283],[90.3860532,23.7343975],[90.3860245,23.7343741],[90.3860008,23.7343487],[90.3859703,23.734318],[90.3859398,23.7342865],[90.3859035,23.7342479],[90.3858826,23.7342262],[90.385859,23.7342022],[90.3858485,23.7341906],[90.3858382,23.7341779],[90.3858317,23.7341674],[90.3858188,23.7341424],[90.3858042,23.7341162],[90.3857856,23.7340883],[90.3857928,23.7340857],[90.3858077,23.7340847],[90.3858236,23.7340872],[90.3858488,23.7340857],[90.3858666,23.734087],[90.3858939,23.7340878],[90.3859038,23.7340888],[90.3859234,23.734087],[90.385944,23.7340874],[90.385973,23.7340882],[90.3859886,23.7340864],[90.386019,23.7340867],[90.386031,23.734087],[90.3860532,23.734087],[90.3860831,23.7340878],[90.3860874,23.7340893],[90.3861022,23.7340895],[90.3861214,23.7340911],[90.3861496,23.7340907],[90.3861706,23.7340889],[90.3861774,23.734088],[90.3861859,23.7340859],[90.3861915,23.7340854],[90.3862009,23.7340864],[90.3862129,23.7340875],[90.3862104,23.7341254],[90.3862056,23.7341735],[90.3862033,23.7341989],[90.386203,23.7342362],[90.3862026,23.7342491],[90.386197,23.7342951],[90.3861967,23.7343064],[90.3861949,23.7343346],[90.3861918,23.7343576],[90.3861909,23.7343888],[90.3861896,23.7344215],[90.3861679,23.7344231],[90.3861425,23.7344241],[90.3861195,23.7344247]]]]}},{"type":"Feature","properties":{"FID":"8","M_District":"Dhaka","Upazila_PS":"Hazaribagh Thana","M_Thana":"Lalbagh","M_U_P_CC":"Dhaka South City Corporation","M_Ward":"DSCC_Ward-22","Mauza":"Hazaribagh","JL_No":"006","Sheet_No":"07","Plot_No":"5581","M_JL_S":"Hazaribag_006_07","JL_Sh_Plot":"006_07_5581","Mz_Ver":"RS","Plot_Type":"Plot","Area_katha":"7.14397","Remarks_1":"","Cur_Use":"Vacant","Suit":"High"},"geometry":{"type":"MultiPolygon","coordinates":[[[[90.3729723,23.7239559],[90.3728374,23.724013],[90.3727662,23.7239167],[90.3727191,23.7238331],[90.3726675,23.7237604],[90.372668,23.7237549],[90.3727632,23.723724],[90.3729111,23.7236788],[90.3729304,23.7236995],[90.3729887,23.7237662],[90.3730178,23.7237973],[90.3730743,23.7238583],[90.3731106,23.7238968],[90.3730962,23.7239],[90.3730747,23.7239115],[90.3729723,23.7239559]]]]}},{"type":"Feature","properties":{"FID":"9","M_District":"Dhaka","Upazila_PS":"Hazaribagh Thana","M_Thana":"Lalbagh","M_U_P_CC":"Dhaka South City Corporation","M_Ward":"DSCC_Ward-22","Mauza":"Hazaribagh","JL_No":"006","Sheet_No":"07","Plot_No":"5534","M_JL_S":"Hazaribag_006_07","JL_Sh_Plot":"006_07_5534","Mz_Ver":"RS","Plot_Type":"Plot","Area_katha":"8.71028","Remarks_1":"","Cur_Use":"Vacant","Suit":"High"},"geometry":{"type":"MultiPolygon","coordinates":[[[[90.3727602,23.7249091],[90.372733,23.7249191],[90.372706,23.7248559],[90.3726588,23.7247594],[90.3726236,23.72468],[90.372592,23.7246153],[90.3725746,23.7245867],[90.3725538,23.7245354],[90.3725273,23.7244815],[90.3724987,23.7244162],[90.3724754,23.7243719],[90.3724521,23.7243166],[90.3724385,23.7242822],[90.3724886,23.7242608],[90.3724946,23.7242571],[90.3725239,23.7243005],[90.3725718,23.724359],[90.3726549,23.7244638],[90.3726939,23.7245136],[90.3727271,23.7245737],[90.3727849,23.7246505],[90.3728164,23.7246912],[90.3728746,23.7247703],[90.3729301,23.7248424],[90.3729086,23.7248551],[90.3727865,23.7249001],[90.3727602,23.7249091]]]]}},{"type":"Feature","properties":{"FID":"10","M_District":"Dhaka","Upazila_PS":"Hazaribagh Thana","M_Thana":"Lalbagh","M_U_P_CC":"Dhaka South City Corporation","M_Ward":"DSCC_Ward-23","Mauza":"Hazaribagh","JL_No":"006","Sheet_No":"12","Plot_No":"8789","M_JL_S":"Hazaribag_006_12","JL_Sh_Plot":"006_12_8789","Mz_Ver":"RS","Plot_Type":"Plot","Area_katha":"5.77983","Remarks_1":"","Cur_Use":"Temporary Structures","Suit":"Low"},"geometry":{"type":"MultiPolygon","coordinates":[[[[90.3786361,23.7208311],[90.3786635,23.7208739],[90.3786187,23.7208929],[90.3786024,23.7208645],[90.3785935,23.720848],[90.3785817,23.7208242],[90.3785605,23.7208322],[90.378509,23.7208544],[90.378503,23.7208446],[90.378457,23.7207637],[90.3784085,23.7206842],[90.3783653,23.7206087],[90.3783368,23.7205629],[90.3783367,23.7205628],[90.378315,23.7205241],[90.3783234,23.7205224],[90.3783688,23.7205013],[90.378409,23.7204858],[90.378481,23.7204628],[90.37854,23.7204453],[90.3785455,23.7204435],[90.3785711,23.7204842],[90.3785741,23.7204899],[90.3785891,23.7205187],[90.378598,23.7205364],[90.3785769,23.7205466],[90.3785421,23.7205638],[90.3785006,23.7205847],[90.3785015,23.7205911],[90.3785065,23.7205981],[90.3785104,23.7206066],[90.378528,23.7206357],[90.3785441,23.7206651],[90.3785581,23.7206911],[90.3785689,23.7207125],[90.3785801,23.7207298],[90.3785972,23.7207597],[90.3786093,23.720783],[90.3786175,23.7208001],[90.3786361,23.7208311]]]]}},{"type":"Feature","properties":{"FID":"11","M_District":"Dhaka","Upazila_PS":"Hazaribagh Thana","M_Thana":"Lalbagh","M_U_P_CC":"Dhaka South City Corporation","M_Ward":"DSCC_Ward-23","Mauza":"Hazaribagh","JL_No":"006","Sheet_No":"13","Plot_No":"9795","M_JL_S":"Hazaribag_006_13","JL_Sh_Plot":"006_13_9795","Mz_Ver":"RS","Plot_Type":"Plot","Area_katha":"8.05906","Remarks_1":"","Cur_Use":"Vacant","Suit":"High"},"geometry":{"type":"MultiPolygon","coordinates":[[[[90.3795172,23.7198899],[90.3795378,23.7199447],[90.3795429,23.7199561],[90.3795489,23.7199596],[90.3795426,23.7199744],[90.3795394,23.7199906],[90.3795328,23.7200138],[90.3795316,23.720018],[90.3795307,23.7200255],[90.3795488,23.7200564],[90.3795773,23.7201181],[90.3795813,23.7201374],[90.3795791,23.7201397],[90.3795683,23.7201548],[90.3795535,23.7201782],[90.3795484,23.7201902],[90.3795402,23.7202148],[90.3795307,23.7202398],[90.3795225,23.7202531],[90.379512,23.7202598],[90.3794854,23.7202749],[90.3794686,23.7202857],[90.3794582,23.7202966],[90.3794533,23.7203039],[90.3794158,23.7203211],[90.3793607,23.7203456],[90.3793103,23.7203685],[90.3792609,23.7203899],[90.379237,23.7204009],[90.3792167,23.7204468],[90.379194,23.7204175],[90.3791632,23.7203726],[90.3791252,23.7203224],[90.3791121,23.7203049],[90.3790994,23.7202878],[90.3791056,23.7202829],[90.3791301,23.7202719],[90.3791596,23.7202601],[90.3791995,23.7202454],[90.379247,23.7202262],[90.3792838,23.7202119],[90.3793188,23.7201963],[90.3793343,23.7201895],[90.3793686,23.7201746],[90.379401,23.7201606],[90.3794385,23.7201425],[90.3794556,23.7201374],[90.3794561,23.7201243],[90.3794597,23.7200706],[90.3794567,23.7200036],[90.3794563,23.7199306],[90.3794559,23.7198558],[90.379457,23.7198357],[90.3794756,23.7198306],[90.3794949,23.7198218],[90.3795172,23.7198899]]]]}},{"type":"Feature","properties":{"FID":"12","M_District":"Dhaka","Upazila_PS":"Hazaribagh Thana","M_Thana":"Lalbagh","M_U_P_CC":"Dhaka South City Corporation","M_Ward":"DSCC_Ward-24","Mauza":"Hazaribagh","JL_No":"006","Sheet_No":"16","Plot_No":"13068","M_JL_S":"Hazaribag_006_16","JL_Sh_Plot":"006_16_13068","Mz_Ver":"RS","Plot_Type":"Plot","Area_katha":"19.802","Remarks_1":"","Cur_Use":"Temporary Structures","Suit":"Low"},"geometry":{"type":"MultiPolygon","coordinates":[[[[90.3808323,23.7147836],[90.380905,23.7148018],[90.3809567,23.7148149],[90.3810176,23.7148327],[90.381103,23.7148608],[90.3811417,23.714873],[90.3811835,23.7148903],[90.3811985,23.7148951],[90.3811915,23.7149268],[90.3811843,23.7149605],[90.3811715,23.7150264],[90.3811671,23.7150424],[90.3811641,23.7150534],[90.381154,23.715098],[90.3811382,23.7151662],[90.3811312,23.7151904],[90.3811183,23.7152407],[90.3811025,23.7153109],[90.3810931,23.7153583],[90.381085,23.715399],[90.3810732,23.7154436],[90.3810631,23.7154429],[90.3810384,23.7154357],[90.3809788,23.7154246],[90.3809202,23.7154096],[90.3808579,23.7153971],[90.3808003,23.7153816],[90.3807692,23.7153768],[90.3807254,23.7153658],[90.3807324,23.7152795],[90.3807336,23.7152511],[90.3807399,23.7152345],[90.3807537,23.7151515],[90.3807719,23.7150425],[90.3807832,23.7149723],[90.3807892,23.7149292],[90.3808063,23.7148623],[90.3808186,23.7148082],[90.3808246,23.7147816],[90.3808323,23.7147836]]]]}},{"type":"Feature","properties":{"FID":"13","M_District":"Dhaka","Upazila_PS":"Mohammadpur Thana","M_Thana":"Mohammadpur","M_U_P_CC":"Dhaka South City Corporation","M_Ward":"DSCC_Ward-14","Mauza":"Katasur","JL_No":"005","Sheet_No":"02","Plot_No":"822","M_JL_S":"Katasur_005_02","JL_Sh_Plot":"005_02_822","Mz_Ver":"RS","Plot_Type":"Plot","Area_katha":"31.9245","Remarks_1":"","Cur_Use":"Temporary Structures","Suit":"High"},"geometry":{"type":"MultiPolygon","coordinates":[[[[90.353121,23.7499652],[90.3530366,23.7499817],[90.3529639,23.749635],[90.3528881,23.7493509],[90.3528466,23.7491526],[90.352931,23.7491392],[90.3530389,23.7491068],[90.3531567,23.7490572],[90.3534387,23.7496549],[90.3535415,23.7498459],[90.3534044,23.7498871],[90.353121,23.7499652]]]]}},{"type":"Feature","properties":{"FID":"14","M_District":"Dhaka","Upazila_PS":"Mohammadpur Thana","M_Thana":"Mohammadpur","M_U_P_CC":"Dhaka South City Corporation","M_Ward":"DSCC_Ward-14","Mauza":"Katasur","JL_No":"005","Sheet_No":"03","Plot_No":"2041","M_JL_S":"Katasur_005_03","JL_Sh_Plot":"005_03_2041","Mz_Ver":"RS","Plot_Type":"Plot","Area_katha":"3.27592","Remarks_1":"Less Than 4 Katha","Cur_Use":"Vacant","Suit":"High"},"geometry":{"type":"MultiPolygon","coordinates":[[[[90.3547766,23.75346],[90.3547304,23.7534615],[90.3546385,23.7534504],[90.3545571,23.7534239],[90.354486,23.7533945],[90.3544559,23.7533627],[90.3545084,23.7532952],[90.354547,23.753243],[90.3545877,23.7532032],[90.3546161,23.7532656],[90.3546444,23.7533318],[90.3546902,23.7533675],[90.3547529,23.7534112],[90.3547766,23.75346]]]]}},{"type":"Feature","properties":{"FID":"15","M_District":"Dhaka","Upazila_PS":"Mohammadpur Thana","M_Thana":"Mohammadpur","M_U_P_CC":"Dhaka North City Corporation","M_Ward":"DNCC_Ward-33","Mauza":"Katasur","JL_No":"005","Sheet_No":"05","Plot_No":"2624","M_JL_S":"Katasur_005_05","JL_Sh_Plot":"005_05_2624","Mz_Ver":"RS","Plot_Type":"Plot","Area_katha":"8.03781","Remarks_1":"Not accessible","Cur_Use":"Vacant","Suit":"Low"},"geometry":{"type":"MultiPolygon","coordinates":[[[[90.3626393,23.7542517],[90.3626127,23.7542564],[90.3625992,23.7542475],[90.3625362,23.7542147],[90.362539,23.754145],[90.3625391,23.7540976],[90.3625498,23.7540982],[90.3626011,23.7540943],[90.3626561,23.7540893],[90.3627071,23.7540846],[90.3627822,23.7540774],[90.3628161,23.7540739],[90.3628971,23.754064],[90.3629296,23.7540607],[90.3629734,23.7540543],[90.3630351,23.7540498],[90.363099,23.7540448],[90.3631012,23.7541077],[90.3631036,23.7541757],[90.3631038,23.7542073],[90.3630232,23.7542156],[90.3629789,23.754219],[90.3629114,23.7542257],[90.3628708,23.754229],[90.362791,23.7542386],[90.362719,23.7542449],[90.3626393,23.7542517]]]]}},{"type":"Feature","properties":{"FID":"16","M_District":"Dhaka","Upazila_PS":"Lalbagh Thana","M_Thana":"Lalbagh","M_U_P_CC":"Dhaka South City Corporation","M_Ward":"DSCC_Ward-27","Mauza":"Lalbagh","JL_No":"008","Sheet_No":"03","Plot_No":"216","M_JL_S":"Lalbagh_008_03","JL_Sh_Plot":"008_03_216","Mz_Ver":"RS","Plot_Type":"Plot","Area_katha":"7.98162","Remarks_1":"","Cur_Use":"Vegetation","Suit":"High"},"geometry":{"type":"MultiPolygon","coordinates":[[[[90.3947373,23.7227362],[90.3946846,23.7227447],[90.3946666,23.7227252],[90.394668,23.722709],[90.3946684,23.7227043],[90.394726,23.7226543],[90.3948102,23.7225764],[90.3948608,23.7225206],[90.3949013,23.7224886],[90.3949178,23.7224799],[90.3949299,23.7224805],[90.3949642,23.7224769],[90.3950442,23.7224669],[90.3951377,23.7224615],[90.395212,23.7224544],[90.3952508,23.7224537],[90.3952871,23.7224577],[90.3953475,23.7224645],[90.395358,23.7224656],[90.3952906,23.7224979],[90.3952367,23.7225309],[90.3951918,23.7225604],[90.3951311,23.7225958],[90.3950905,23.7226273],[90.3950752,23.7226365],[90.3950636,23.7226428],[90.3950429,23.7226511],[90.3949933,23.7226719],[90.3949357,23.7226977],[90.3949251,23.7227016],[90.3948579,23.7227138],[90.3947373,23.7227362]]]]}},{"type":"Feature","properties":{"FID":"17","M_District":"Dhaka","Upazila_PS":"Lalbagh Thana","M_Thana":"Lalbagh","M_U_P_CC":"Dhaka South City Corporation","M_Ward":"DSCC_Ward-26","Mauza":"Lalbagh","JL_No":"008","Sheet_No":"08","Plot_No":"1493","M_JL_S":"Lalbagh_008_08","JL_Sh_Plot":"008_08_1493","Mz_Ver":"RS","Plot_Type":"Plot","Area_katha":"4.93196","Remarks_1":"","Cur_Use":"Structures with vacant space","Suit":"Medium"},"geometry":{"type":"MultiPolygon","coordinates":[[[[90.3865132,23.7217419],[90.38651,23.7217488],[90.3864205,23.7217459],[90.3863883,23.7217452],[90.3863606,23.7217446],[90.3862688,23.7217376],[90.3862539,23.7217371],[90.3862077,23.7217355],[90.3861711,23.7217333],[90.3861178,23.7217315],[90.3860925,23.7217283],[90.3860893,23.7217163],[90.3860947,23.7216893],[90.3861043,23.7216555],[90.3861129,23.7216179],[90.3861138,23.7216132],[90.3861639,23.7216141],[90.3862196,23.7216117],[90.3862474,23.7216086],[90.3862842,23.7216075],[90.3863052,23.7216063],[90.3863593,23.7216054],[90.3864386,23.7216023],[90.3864927,23.7216018],[90.3865145,23.7215994],[90.3865175,23.7216255],[90.3865132,23.7217419]]]]}},{"type":"Feature","properties":{"FID":"18","M_District":"Dhaka","Upazila_PS":"Lalbagh Thana","M_Thana":"Lalbagh","M_U_P_CC":"Dhaka South City Corporation","M_Ward":"DSCC_Ward-26","Mauza":"Lalbagh","JL_No":"008","Sheet_No":"08","Plot_No":"1494","M_JL_S":"Lalbagh_008_08","JL_Sh_Plot":"008_08_1494","Mz_Ver":"RS","Plot_Type":"Plot","Area_katha":"11.1139","Remarks_1":"","Cur_Use":"Structures with vacant space","Suit":"Medium"},"geometry":{"type":"MultiPolygon","coordinates":[[[[90.3872293,23.7217865],[90.3871943,23.7217865],[90.387177,23.7217856],[90.3871566,23.7217846],[90.3871082,23.721781],[90.3870886,23.7217802],[90.3870685,23.7217781],[90.3870428,23.7217757],[90.3870287,23.7217748],[90.3870062,23.7217734],[90.3869757,23.7217716],[90.3868846,23.7217687],[90.3868565,23.7217685],[90.3868183,23.721767],[90.3867308,23.7217615],[90.3867103,23.7217594],[90.3866726,23.7217576],[90.3865759,23.7217539],[90.3865505,23.7217536],[90.38651,23.7217488],[90.3865132,23.7217419],[90.3865175,23.7216255],[90.3865145,23.7215994],[90.38656,23.7215967],[90.386612,23.7215909],[90.3866293,23.7215878],[90.3866677,23.7215808],[90.3867339,23.7215709],[90.3867639,23.7215668],[90.3867923,23.7215603],[90.3868207,23.7215533],[90.3868867,23.7215388],[90.386904,23.7215375],[90.3869407,23.7215494],[90.3869701,23.7215541],[90.3869971,23.7215613],[90.3870454,23.7215705],[90.3870527,23.7215754],[90.3870794,23.7215998],[90.3871154,23.7216398],[90.3871399,23.721669],[90.3871746,23.7217126],[90.3871907,23.7217388],[90.3872043,23.7217496],[90.3872293,23.7217865]]]]}},{"type":"Feature","properties":{"FID":"19","M_District":"Dhaka","Upazila_PS":"Lalbagh Thana","M_Thana":"Lalbagh","M_U_P_CC":"Dhaka South City Corporation","M_Ward":"DSCC_Ward-29","Mauza":"Lalbagh","JL_No":"008","Sheet_No":"09","Plot_No":"2505","M_JL_S":"Lalbagh_008_09","JL_Sh_Plot":"008_09_2505","Mz_Ver":"RS","Plot_Type":"Plot","Area_katha":"79.6109","Remarks_1":"","Cur_Use":"Temporary Structures","Suit":"Low"},"geometry":{"type":"MultiPolygon","coordinates":[[[[90.3863295,23.7155098],[90.3863142,23.7155416],[90.3862733,23.7156684],[90.3863341,23.715693],[90.3864767,23.7157507],[90.3865163,23.7157652],[90.3865859,23.7157949],[90.3866695,23.7158296],[90.3866642,23.7158421],[90.3866493,23.7158974],[90.3866194,23.7160209],[90.3866065,23.7160724],[90.3866048,23.7160765],[90.3865345,23.7160677],[90.3865036,23.7160628],[90.3864501,23.7160557],[90.3863737,23.7160424],[90.3863024,23.7160231],[90.3862499,23.7159974],[90.3862138,23.715976],[90.3861876,23.7159573],[90.3861257,23.7159135],[90.3860493,23.7158583],[90.3859873,23.7157987],[90.385907,23.7157172],[90.3858327,23.7156511],[90.3857925,23.7156097],[90.3856843,23.7155017],[90.3856088,23.7154222],[90.3855918,23.7154034],[90.3855197,23.7154689],[90.385458,23.7154042],[90.3854476,23.7153932],[90.3853407,23.7152916],[90.3853175,23.7152709],[90.385295,23.7152501],[90.3852638,23.7152836],[90.3852181,23.7153206],[90.3851842,23.7153521],[90.3850927,23.7154384],[90.385029,23.7154963],[90.3849908,23.7155372],[90.3849621,23.715525],[90.3849835,23.715492],[90.3850047,23.7154707],[90.3850671,23.7154108],[90.3850671,23.7154063],[90.3850327,23.7153327],[90.3849697,23.7152286],[90.3849311,23.7151406],[90.3848918,23.7150545],[90.3848726,23.7150047],[90.3848644,23.7149739],[90.3849755,23.7149681],[90.3850142,23.714966],[90.3852554,23.7149463],[90.3853418,23.7149461],[90.385365,23.7149478],[90.3855209,23.7149706],[90.385546,23.7149743],[90.3856092,23.714979],[90.3856492,23.7149854],[90.3858601,23.7150108],[90.3859177,23.7150217],[90.3860853,23.7150444],[90.386198,23.715058],[90.3862015,23.7150588],[90.3862062,23.7150676],[90.3862297,23.715111],[90.3862881,23.7152004],[90.386344,23.7152759],[90.3863939,23.7153275],[90.3863928,23.7153302],[90.3863695,23.7153896],[90.3863295,23.7155098]]]]}},{"type":"Feature","properties":{"FID":"20","M_District":"Dhaka","Upazila_PS":"Lalbagh Thana","M_Thana":"Lalbagh","M_U_P_CC":"Dhaka South City Corporation","M_Ward":"DSCC_Ward-29","Mauza":"Lalbagh","JL_No":"008","Sheet_No":"09","Plot_No":"2390","M_JL_S":"Lalbagh_008_09","JL_Sh_Plot":"008_09_2390","Mz_Ver":"RS","Plot_Type":"Plot","Area_katha":"24.5941","Remarks_1":"","Cur_Use":"Temporary Structures","Suit":"Low"},"geometry":{"type":"MultiPolygon","coordinates":[[[[90.3877727,23.7163322],[90.3877365,23.7163835],[90.3877064,23.7163748],[90.3876091,23.7163441],[90.3874892,23.71631],[90.387372,23.716274],[90.3872604,23.7162381],[90.3871741,23.7162107],[90.3871042,23.7161881],[90.3870371,23.7161701],[90.3870191,23.7161664],[90.3870036,23.7161622],[90.3869651,23.7161505],[90.3868527,23.7161191],[90.3868096,23.7161076],[90.3867238,23.7160918],[90.3866048,23.7160765],[90.3866065,23.7160724],[90.3866194,23.7160209],[90.3866493,23.7158974],[90.3866642,23.7158421],[90.3866695,23.7158296],[90.3867267,23.7158575],[90.3868509,23.715901],[90.3869231,23.7159307],[90.3870842,23.7159927],[90.3872189,23.7160487],[90.3872507,23.7160598],[90.3874136,23.7161244],[90.387506,23.7161609],[90.3875149,23.7161561],[90.3875248,23.7161357],[90.3875482,23.7160851],[90.3875905,23.716001],[90.3876087,23.7159413],[90.3876171,23.7158971],[90.387625,23.7158947],[90.3876321,23.7158972],[90.3877193,23.7159238],[90.3878569,23.7159536],[90.3878453,23.7159699],[90.3878173,23.7160276],[90.3877859,23.7160815],[90.387765,23.7161201],[90.387742,23.7161518],[90.3877467,23.7161633],[90.38776,23.7162101],[90.3877625,23.7162472],[90.3877635,23.7162556],[90.3877727,23.7163322]]]]}},{"type":"Feature","properties":{"FID":"21","M_District":"Dhaka","Upazila_PS":"Lalbagh Thana","M_Thana":"Lalbagh","M_U_P_CC":"Dhaka South City Corporation","M_Ward":"DSCC_Ward-29","Mauza":"Lalbagh","JL_No":"008","Sheet_No":"11","Plot_No":"3546","M_JL_S":"Lalbagh_008_11","JL_Sh_Plot":"008_11_3546","Mz_Ver":"RS","Plot_Type":"Plot","Area_katha":"4.21824","Remarks_1":"Low Accessibility","Cur_Use":"Partially Vacant","Suit":"Medium"},"geometry":{"type":"MultiPolygon","coordinates":[[[[90.3882983,23.713431],[90.3883326,23.713438],[90.3883915,23.7134591],[90.3884229,23.7134655],[90.388534,23.713485],[90.3885474,23.7134893],[90.3885677,23.7134921],[90.3885573,23.7135627],[90.3885504,23.7135988],[90.3885403,23.713656],[90.3882798,23.7136166],[90.3882782,23.7136164],[90.3882795,23.7136034],[90.3882854,23.7135423],[90.388295,23.7134303],[90.3882983,23.713431]]]]}},{"type":"Feature","properties":{"FID":"22","M_District":"Dhaka","Upazila_PS":"Mohammadpur Thana","M_Thana":"Mohammadpur","M_U_P_CC":"Dhaka North City Corporation","M_Ward":"DNCC_Ward-28","Mauza":"Mohammadpur","JL_No":"003","Sheet_No":"02","Plot_No":"62","M_JL_S":"Mohammadpur_003_02","JL_Sh_Plot":"003_02_62","Mz_Ver":"RS","Plot_Type":"Plot","Area_katha":"105.356","Remarks_1":"","Cur_Use":"Temporary Structures","Suit":"High"},"geometry":{"type":"MultiPolygon","coordinates":[[[[90.3637493,23.7782845],[90.3637113,23.7784645],[90.363672,23.7784296],[90.3637043,23.7782883],[90.3637085,23.7782703],[90.3637308,23.7781858],[90.3637454,23.7781508],[90.3638098,23.7779954],[90.3636902,23.7779359],[90.3636086,23.777897],[90.3635058,23.7778523],[90.3635001,23.7778561],[90.3634157,23.7780386],[90.3633936,23.7780863],[90.363375,23.77813],[90.3633411,23.7782099],[90.3633074,23.7781979],[90.3632543,23.7781732],[90.3631568,23.7781222],[90.3630766,23.7780787],[90.3629666,23.7780273],[90.36292,23.7780018],[90.3628789,23.7779735],[90.3628283,23.7779237],[90.3628024,23.7778998],[90.362771,23.7778849],[90.3627243,23.7778685],[90.3626515,23.7778484],[90.3625857,23.7778345],[90.3625389,23.7778262],[90.3624542,23.7777967],[90.362402,23.7777791],[90.3623152,23.7777455],[90.3624144,23.7776666],[90.3627155,23.7774455],[90.3629292,23.7772915],[90.3631147,23.7771507],[90.363279,23.7772388],[90.3634278,23.777312],[90.3634187,23.777325],[90.3636651,23.7774338],[90.3638616,23.7775108],[90.3638638,23.7775117],[90.36398,23.7775593],[90.364145,23.7776198],[90.3642368,23.7776915],[90.3643109,23.7777479],[90.3642976,23.7778119],[90.3642902,23.7778348],[90.3642149,23.7780009],[90.3641571,23.7781246],[90.3641296,23.7781854],[90.364113,23.7782319],[90.3640847,23.7782873],[90.364062,23.7783326],[90.3640557,23.7783866],[90.3640481,23.778446],[90.3639603,23.7784002],[90.3637986,23.7783068],[90.3637508,23.7782832],[90.3637493,23.7782845]]]]}},{"type":"Feature","properties":{"FID":"23","M_District":"Dhaka","Upazila_PS":"Mohammadpur Thana","M_Thana":"Mohammadpur","M_U_P_CC":"Dhaka North City Corporation","M_Ward":"DNCC_Ward-32","Mauza":"Mohammadpur","JL_No":"003","Sheet_No":"30","Plot_No":"8566","M_JL_S":"Mohammadpur_003_30","JL_Sh_Plot":"003_30_8566","Mz_Ver":"RS","Plot_Type":"Plot","Area_katha":"4.13175","Remarks_1":"","Cur_Use":"Vacant","Suit":"Medium"},"geometry":{"type":"MultiPolygon","coordinates":[[[[90.3672392,23.7609704],[90.3672335,23.7609835],[90.3672216,23.7609819],[90.3671798,23.7609722],[90.3671171,23.7609574],[90.3670695,23.7609454],[90.3670008,23.7609263],[90.3669818,23.7609205],[90.3669763,23.7609193],[90.3669834,23.7608933],[90.3669879,23.7608828],[90.3670003,23.7608469],[90.3670083,23.7608265],[90.3670309,23.7607681],[90.3670353,23.7607582],[90.3670682,23.760766],[90.3671288,23.7607818],[90.3671652,23.7607894],[90.3672193,23.7608017],[90.3672307,23.7608047],[90.3672655,23.7608141],[90.3672929,23.7608213],[90.3672793,23.7608553],[90.3672732,23.7608716],[90.3672713,23.7608803],[90.3672701,23.7608866],[90.3672577,23.7609169],[90.3672495,23.7609393],[90.3672392,23.7609704]]]]}},{"type":"Feature","properties":{"FID":"24","M_District":"Dhaka","Upazila_PS":"Mohammadpur Thana","M_Thana":"Mohammadpur","M_U_P_CC":"Dhaka North City Corporation","M_Ward":"DNCC_Ward-32","Mauza":"Mohammadpur","JL_No":"003","Sheet_No":"31","Plot_No":"8851","M_JL_S":"Mohammadpur_003_31","JL_Sh_Plot":"003_31_8851","Mz_Ver":"RS","Plot_Type":"Plot","Area_katha":"7.74002","Remarks_1":"","Cur_Use":"Vacant","Suit":"High"},"geometry":{"type":"MultiPolygon","coordinates":[[[[90.3709689,23.7634316],[90.3709439,23.7634848],[90.3708889,23.7634709],[90.3708114,23.7634463],[90.3706941,23.7634166],[90.3705914,23.7633847],[90.3705999,23.7633722],[90.3706148,23.7633482],[90.3706339,23.7633089],[90.3706689,23.7632455],[90.3706986,23.7631956],[90.3707188,23.7631572],[90.3707241,23.7631476],[90.3707848,23.7631743],[90.370835,23.7631984],[90.3708832,23.7632167],[90.3709376,23.7632407],[90.3709731,23.7632582],[90.3710134,23.7632772],[90.3710375,23.7632873],[90.3710443,23.7632886],[90.3710177,23.7633395],[90.3709912,23.7633846],[90.3709689,23.7634316]]]]}},{"type":"Feature","properties":{"FID":"25","M_District":"Dhaka","Upazila_PS":"Lalbagh Thana","M_Thana":"Lalbagh","M_U_P_CC":"Dhaka South City Corporation","M_Ward":"DSCC_Ward-22","Mauza":"Nutan Paltan Lane","JL_No":"007","Sheet_No":"08","Plot_No":"454","M_JL_S":"NutanPaltan_007_08","JL_Sh_Plot":"007_08_454","Mz_Ver":"RS","Plot_Type":"Plot","Area_katha":"1.03826","Remarks_1":"Less Than 4 Katha","Cur_Use":"Structures with vacant space","Suit":"Medium"},"geometry":{"type":"MultiPolygon","coordinates":[[[[90.3766732,23.7277484],[90.3766448,23.7278572],[90.3765757,23.7278379],[90.3765925,23.7278079],[90.376654,23.7276673],[90.3766675,23.727633],[90.3767073,23.7276519],[90.3767003,23.7276669],[90.3766732,23.7277484]]]]}},{"type":"Feature","properties":{"FID":"26","M_District":"Dhaka","Upazila_PS":"Lalbagh Thana","M_Thana":"Lalbagh","M_U_P_CC":"Dhaka South City Corporation","M_Ward":"DSCC_Ward-22","Mauza":"Nutan Paltan Lane","JL_No":"007","Sheet_No":"08","Plot_No":"453","M_JL_S":"NutanPaltan_007_08","JL_Sh_Plot":"007_08_453","Mz_Ver":"RS","Plot_Type":"Plot","Area_katha":"5.0087","Remarks_1":"","Cur_Use":"Structures with vacant space","Suit":"Medium"},"geometry":{"type":"MultiPolygon","coordinates":[[[[90.3766448,23.7278572],[90.3766421,23.7278811],[90.3766316,23.7279541],[90.3766181,23.728],[90.3766027,23.7280425],[90.3765169,23.7282146],[90.376504,23.7282406],[90.3764169,23.7282089],[90.376349,23.7281813],[90.3763424,23.7281786],[90.3763648,23.7281381],[90.3764021,23.7280925],[90.3764107,23.7280821],[90.3764403,23.7280334],[90.3764643,23.7279939],[90.3765211,23.7279103],[90.3765308,23.7278997],[90.3765567,23.7278716],[90.3765678,23.7278519],[90.3765753,23.7278385],[90.3765757,23.7278379],[90.3766448,23.7278572]]]]}},{"type":"Feature","properties":{"FID":"27","M_District":"Dhaka","Upazila_PS":"Lalbagh Thana","M_Thana":"Lalbagh","M_U_P_CC":"Dhaka South City Corporation","M_Ward":"DSCC_Ward-22","Mauza":"Nutan Paltan Lane","JL_No":"007","Sheet_No":"08","Plot_No":"452","M_JL_S":"NutanPaltan_007_08","JL_Sh_Plot":"007_08_452","Mz_Ver":"RS","Plot_Type":"Plot","Area_katha":"1.64119","Remarks_1":"Less Than 4 Katha","Cur_Use":"Structures with vacant space","Suit":"Medium"},"geometry":{"type":"MultiPolygon","coordinates":[[[[90.376349,23.7281813],[90.3764169,23.7282089],[90.376504,23.7282406],[90.3764574,23.7283347],[90.37629,23.7282712],[90.3762883,23.7282706],[90.3762945,23.7282609],[90.376329,23.7282029],[90.3763424,23.7281786],[90.376349,23.7281813]]]]}},{"type":"Feature","properties":{"FID":"28","M_District":"Dhaka","Upazila_PS":"Ramna Thana","M_Thana":"Ramna","M_U_P_CC":"Dhaka South City Corporation","M_Ward":"DSCC_Ward-21","Mauza":"Ramna","JL_No":"007","Sheet_No":"06","Plot_No":"234","M_JL_S":"Ramna_007_06","JL_Sh_Plot":"007_06_234","Mz_Ver":"RS","Plot_Type":"Plot","Area_katha":"15.7991","Remarks_1":"","Cur_Use":"Structures with vacant space","Suit":"Low"},"geometry":{"type":"MultiPolygon","coordinates":[[[[90.392624,23.7392097],[90.3924827,23.7392116],[90.3924812,23.7391961],[90.392474,23.7391689],[90.3924566,23.7391062],[90.3924239,23.7390038],[90.3923982,23.738917],[90.3923731,23.7388332],[90.392364,23.7387985],[90.3923524,23.7387607],[90.3923473,23.738723],[90.3923326,23.7386871],[90.3923711,23.7386818],[90.3924092,23.7386763],[90.3924392,23.7386735],[90.3924676,23.7386708],[90.3925069,23.7386647],[90.3925341,23.7386615],[90.3926244,23.7386474],[90.3926472,23.7386438],[90.3926632,23.7386952],[90.3926791,23.7387587],[90.3926998,23.7388243],[90.3927296,23.7389165],[90.3927412,23.7389476],[90.392747,23.7389979],[90.39276,23.7390412],[90.3927854,23.7391538],[90.3927975,23.7392106],[90.392624,23.7392097]]]]}},{"type":"Feature","properties":{"FID":"29","M_District":"Dhaka","Upazila_PS":"Ramna Thana","M_Thana":"Ramna","M_U_P_CC":"Dhaka South City Corporation","M_Ward":"DSCC_Ward-20","Mauza":"Ramna","JL_No":"007","Sheet_No":"15","Plot_No":"805","M_JL_S":"Ramna_007_15","JL_Sh_Plot":"007_15_805","Mz_Ver":"RS","Plot_Type":"Plot","Area_katha":"5.01209","Remarks_1":"","Cur_Use":"Vegetation","Suit":"Medium"},"geometry":{"type":"MultiPolygon","coordinates":[[[[90.4001447,23.7286031],[90.4001468,23.7286493],[90.4001096,23.7286458],[90.4000442,23.7286394],[90.3999473,23.7286281],[90.3998911,23.7286217],[90.3998338,23.7286158],[90.3998639,23.7285854],[90.3999218,23.728527],[90.3999683,23.7284768],[90.3999824,23.7284597],[90.400004,23.7284362],[90.4000237,23.7284144],[90.4000606,23.7283738],[90.4001311,23.7283001],[90.4001435,23.7282887],[90.4001416,23.7283509],[90.4001448,23.7284094],[90.4001465,23.7284871],[90.4001445,23.728522],[90.4001447,23.7286031]]]]}},{"type":"Feature","properties":{"FID":"30","M_District":"Dhaka","Upazila_PS":"Mohammadpur Thana","M_Thana":"Mohammadpur","M_U_P_CC":"Dhaka North City Corporation","M_Ward":"DNCC_Ward-34","Mauza":"Sarai Jafrabad","JL_No":"007","Sheet_No":"01","Plot_No":"145","M_JL_S":"Sarai_Jafrabad_007_01","JL_Sh_Plot":"007_01_145","Mz_Ver":"RS","Plot_Type":"Plot","Area_katha":"5.35465","Remarks_1":"","Cur_Use":"Partially Vacant","Suit":"Medium"},"geometry":{"type":"MultiPolygon","coordinates":[[[[90.3620419,23.7508611],[90.3619498,23.7511244],[90.3618482,23.7510991],[90.3617234,23.7510577],[90.3618257,23.7508768],[90.3618807,23.7508014],[90.3618891,23.7507963],[90.361924,23.7508126],[90.3619232,23.750818],[90.3619721,23.7508412],[90.3620038,23.7508456],[90.3620419,23.7508611]]]]}},{"type":"Feature","properties":{"FID":"31","M_District":"Dhaka","Upazila_PS":"Tejgaon Thana","M_Thana":"Tejgaon","M_U_P_CC":"Dhaka South City Corporation","M_Ward":"DSCC_Ward-15","Mauza":"Sukrabad","JL_No":"002","Sheet_No":"04","Plot_No":"937","M_JL_S":"Sukrabad_002_04","JL_Sh_Plot":"002_04_937","Mz_Ver":"RS","Plot_Type":"Plot","Area_katha":"4.93955","Remarks_1":"","Cur_Use":"Vacant","Suit":"High"},"geometry":{"type":"MultiPolygon","coordinates":[[[[90.3793766,23.752035],[90.3793769,23.752054],[90.3793468,23.7520479],[90.3793012,23.7520404],[90.3792581,23.7520344],[90.3792266,23.7520299],[90.3792042,23.7520237],[90.3791833,23.7520175],[90.3791642,23.7520145],[90.3791428,23.7520131],[90.3791238,23.7520125],[90.3791139,23.7520109],[90.3791149,23.7519959],[90.3791221,23.7519371],[90.3791284,23.7518767],[90.3791346,23.7518329],[90.3791438,23.7517782],[90.3791939,23.7517926],[90.3792513,23.751809],[90.3793192,23.7518313],[90.3793772,23.75185],[90.3793764,23.7519031],[90.3793767,23.7519468],[90.3793779,23.7519905],[90.3793766,23.752035]]]]}},{"type":"Feature","properties":{"FID":"32","M_District":"Dhaka","Upazila_PS":"Hazaribagh Thana","M_Thana":"Mohammadpur","M_U_P_CC":"Dhaka North City Corporation","M_Ward":"DNCC_Ward-34","Mauza":"Sultanganj","JL_No":"006","Sheet_No":"02","Plot_No":"223","M_JL_S":"Sultanganj_006_02","JL_Sh_Plot":"006_02_223","Mz_Ver":"RS","Plot_Type":"Plot","Area_katha":"6.43095","Remarks_1":"","Cur_Use":"Permanent Structure","Suit":"Low"},"geometry":{"type":"MultiPolygon","coordinates":[[[[90.3640684,23.7474714],[90.3640513,23.7475985],[90.3639912,23.7475842],[90.3638538,23.7475562],[90.3638531,23.7475488],[90.3638604,23.7474825],[90.3638716,23.7473432],[90.3638743,23.74731],[90.3638859,23.7472171],[90.3639157,23.74722],[90.363936,23.7472216],[90.3639474,23.7472183],[90.3639493,23.7472332],[90.3640122,23.7472373],[90.3640984,23.7472431],[90.3640926,23.7472762],[90.3640829,23.7473341],[90.3640684,23.7474714]]]]}},{"type":"Feature","properties":{"FID":"33","M_District":"Dhaka","Upazila_PS":"Sutrapur Thana","M_Thana":"Sutrapur","M_U_P_CC":"Dhaka South City Corporation","M_Ward":"DSCC_Ward-45","Mauza":"Sutrapur","JL_No":"003","Sheet_No":"05","Plot_No":"7108","M_JL_S":"Sutrapur_003_05","JL_Sh_Plot":"003_05_7108","Mz_Ver":"RS","Plot_Type":"Plot","Area_katha":"145.049","Remarks_1":"","Cur_Use":"Partially Vacant","Suit":"Medium"},"geometry":{"type":"MultiPolygon","coordinates":[[[[90.4226955,23.7074688],[90.4226502,23.707471],[90.4225884,23.7074698],[90.422505,23.7074661],[90.4224427,23.7074663],[90.4223897,23.7074636],[90.4223445,23.7074639],[90.4222945,23.7074632],[90.4221794,23.7074584],[90.4221749,23.7074582],[90.4220759,23.7074521],[90.4219857,23.7074491],[90.4219408,23.7074454],[90.4219393,23.707417],[90.4219399,23.7073598],[90.4219417,23.7073273],[90.4219418,23.7072957],[90.4219428,23.707274],[90.421947,23.7072439],[90.4219504,23.7072012],[90.4219524,23.707151],[90.421954,23.707101],[90.4219576,23.7070373],[90.4219593,23.7069778],[90.4219603,23.7068962],[90.4219612,23.7068153],[90.4219642,23.7067654],[90.4219664,23.7067112],[90.4219707,23.7066337],[90.4219738,23.7065901],[90.4219759,23.7065592],[90.4219753,23.7065125],[90.4219726,23.7064795],[90.4219724,23.7064538],[90.4219708,23.7064268],[90.421968,23.7063882],[90.4219651,23.706315],[90.4219619,23.7062478],[90.4219619,23.70621],[90.4219628,23.7061607],[90.4219693,23.7060951],[90.4219787,23.7060138],[90.4219867,23.7059476],[90.4219904,23.7058984],[90.4219931,23.7058537],[90.4220227,23.7058556],[90.422141,23.7058673],[90.4223104,23.7058826],[90.4224441,23.7058928],[90.4225951,23.7059065],[90.4227242,23.705919],[90.4228415,23.7059307],[90.4229189,23.70594],[90.4230066,23.7059487],[90.4230957,23.7059608],[90.4231926,23.7059717],[90.4232763,23.7059774],[90.4233356,23.7059813],[90.4233717,23.7059859],[90.4233861,23.7059845],[90.4234419,23.7059748],[90.4234452,23.7060475],[90.4234475,23.7061311],[90.4234472,23.7061599],[90.4234468,23.7061773],[90.423433,23.7061777],[90.4233132,23.7061677],[90.4231516,23.7061558],[90.4230157,23.706143],[90.4229198,23.7061352],[90.4229141,23.7061525],[90.4229068,23.7061941],[90.4228959,23.7062591],[90.4228842,23.7063425],[90.4228787,23.7063967],[90.4228726,23.706454],[90.4228613,23.7065282],[90.4228476,23.7066116],[90.4228396,23.70669],[90.4228331,23.706746],[90.422823,23.7068147],[90.422815,23.7068932],[90.4228062,23.7069767],[90.422796,23.707026],[90.4227844,23.7071076],[90.4227781,23.707159],[90.4227782,23.7071986],[90.4228441,23.7072086],[90.4229084,23.7072191],[90.4230655,23.7072418],[90.4231699,23.7072564],[90.4232105,23.70726],[90.4233375,23.7072763],[90.4234273,23.7072885],[90.4235408,23.7073075],[90.4236481,23.7073249],[90.4237447,23.7073383],[90.4238287,23.7073494],[90.4238227,23.7073934],[90.4238201,23.7074071],[90.4237971,23.7074059],[90.4237559,23.7074036],[90.423702,23.7074018],[90.4236695,23.7074034],[90.4236417,23.7074099],[90.4236001,23.7074168],[90.4235607,23.7074191],[90.4235185,23.7074196],[90.4234807,23.7074187],[90.4234237,23.7074187],[90.4233876,23.7074138],[90.4233291,23.7074054],[90.4232637,23.7073958],[90.423206,23.7073902],[90.4231609,23.7073878],[90.4231193,23.7073841],[90.423086,23.7073839],[90.4230672,23.707386],[90.4230245,23.7073947],[90.4229728,23.7074086],[90.4229272,23.7074172],[90.4228974,23.7074254],[90.4228475,23.7074412],[90.4227954,23.7074538],[90.4227499,23.7074614],[90.4226955,23.7074688]]]]}},{"type":"Feature","properties":{"FID":"34","M_District":"Dhaka","Upazila_PS":"Sutrapur Thana","M_Thana":"Sutrapur","M_U_P_CC":"Dhaka South City Corporation","M_Ward":"DSCC_Ward-45","Mauza":"Sutrapur","JL_No":"003","Sheet_No":"09","Plot_No":"10289","M_JL_S":"Sutrapur_003_09","JL_Sh_Plot":"003_09_10289","Mz_Ver":"RS","Plot_Type":"Plot","Area_katha":"46.435","Remarks_1":"","Cur_Use":"Govt. Office","Suit":"Low"},"geometry":{"type":"MultiPolygon","coordinates":[[[[90.4195991,23.7054978],[90.4195338,23.7055142],[90.4195277,23.7055025],[90.4195035,23.7054609],[90.419487,23.7054297],[90.4194664,23.7053879],[90.4194519,23.7053611],[90.4194402,23.7053388],[90.419426,23.7053103],[90.4194138,23.7052897],[90.4194065,23.7052846],[90.4193714,23.7052444],[90.4193549,23.7052242],[90.4193435,23.7052062],[90.4193258,23.7051811],[90.4193091,23.7051569],[90.4192995,23.7051412],[90.4192867,23.7051163],[90.4192751,23.7050927],[90.4192622,23.7050673],[90.4192477,23.7050352],[90.4192417,23.705021],[90.4192385,23.7050095],[90.4192319,23.7049848],[90.4192241,23.7049508],[90.4192142,23.7048997],[90.4192094,23.7048571],[90.4192115,23.7048017],[90.4192433,23.704796],[90.4192796,23.7047923],[90.4193406,23.7047856],[90.4193802,23.7047827],[90.4194663,23.7047788],[90.4195388,23.7047739],[90.4195955,23.7047702],[90.4196568,23.7047636],[90.4197178,23.7047576],[90.4198007,23.7047479],[90.4198274,23.7047451],[90.4198289,23.7047122],[90.4198664,23.704713],[90.4199876,23.7047212],[90.4200426,23.7047263],[90.4200421,23.704751],[90.4200404,23.7048313],[90.4200493,23.7049045],[90.4200542,23.7049449],[90.4200629,23.7049656],[90.4200707,23.7049833],[90.4200768,23.7050131],[90.4200903,23.7050853],[90.4200946,23.7051085],[90.4201043,23.7051612],[90.42011,23.7052054],[90.4201163,23.7052641],[90.420118,23.7052817],[90.4201211,23.7053143],[90.4201207,23.7053229],[90.4201163,23.7053282],[90.4201053,23.7053316],[90.4200321,23.7053532],[90.4199261,23.7053845],[90.4198164,23.705422],[90.4197591,23.7054429],[90.4196494,23.7054804],[90.4195991,23.7054978]]]]}},{"type":"Feature","properties":{"FID":"35","M_District":"Dhaka","Upazila_PS":"Sutrapur Thana","M_Thana":"Sutrapur","M_U_P_CC":"Dhaka South City Corporation","M_Ward":"DSCC_Ward-43","Mauza":"Sutrapur","JL_No":"003","Sheet_No":"10","Plot_No":"11033","M_JL_S":"Sutrapur_003_10","JL_Sh_Plot":"003_10_11033","Mz_Ver":"RS","Plot_Type":"Plot","Area_katha":"13.5068","Remarks_1":"","Cur_Use":"Temporary market","Suit":"Low"},"geometry":{"type":"MultiPolygon","coordinates":[[[[90.4128359,23.7055154],[90.4128027,23.7055159],[90.4128136,23.7055028],[90.412819,23.7054911],[90.4128193,23.7054829],[90.4128167,23.7054756],[90.4128081,23.7054693],[90.4127933,23.705465],[90.4127888,23.705465],[90.4127796,23.7054088],[90.4127711,23.7053307],[90.4127603,23.7052555],[90.4127508,23.7052241],[90.4127345,23.7051483],[90.4127246,23.7050955],[90.4127207,23.7050785],[90.4127085,23.705029],[90.4127006,23.7049822],[90.4126966,23.7049508],[90.4127085,23.7049506],[90.4127194,23.7049599],[90.4127364,23.704971],[90.4127519,23.7049822],[90.4127912,23.7050053],[90.4128213,23.7050219],[90.4128455,23.705035],[90.4128636,23.7050469],[90.4128862,23.7050597],[90.4128951,23.7050691],[90.4129126,23.7050877],[90.4129317,23.705106],[90.4129565,23.7051322],[90.412977,23.7051508],[90.4129973,23.7051728],[90.4130189,23.7051955],[90.4130377,23.7052153],[90.4130573,23.70524],[90.413075,23.7052616],[90.413094,23.7052841],[90.4131036,23.7053025],[90.4131222,23.7053382],[90.4131391,23.7053732],[90.4131511,23.7053984],[90.4131651,23.7054242],[90.4131789,23.7054479],[90.4131736,23.7054511],[90.4132051,23.7055089],[90.4132041,23.7055127],[90.4131951,23.7055141],[90.413156,23.705515],[90.4130933,23.7055141],[90.4130339,23.7055126],[90.4129117,23.705515],[90.4128359,23.7055154]]]]}},{"type":"Feature","properties":{"FID":"36","M_District":"Dhaka","Upazila_PS":"Sutrapur Thana","M_Thana":"Sutrapur","M_U_P_CC":"Dhaka South City Corporation","M_Ward":"DSCC_Ward-43","Mauza":"Sutrapur","JL_No":"003","Sheet_No":"10","Plot_No":"11032","M_JL_S":"Sutrapur_003_10","JL_Sh_Plot":"003_10_11032","Mz_Ver":"RS","Plot_Type":"Plot","Area_katha":"15.6635","Remarks_1":"","Cur_Use":"Temporary market","Suit":"Low"},"geometry":{"type":"MultiPolygon","coordinates":[[[[90.412444,23.7055201],[90.4124369,23.7055201],[90.412437,23.7053856],[90.4124369,23.7052847],[90.4124314,23.7052194],[90.412431,23.7051797],[90.4124298,23.7051121],[90.4124323,23.7050883],[90.4124375,23.7050598],[90.4124446,23.7050265],[90.4124508,23.704994],[90.41247,23.7049879],[90.4125111,23.7049766],[90.4125449,23.7049698],[90.4125762,23.7049606],[90.4125971,23.7049548],[90.412611,23.7049545],[90.4126205,23.7049542],[90.4126508,23.7049522],[90.4126887,23.7049509],[90.4126966,23.7049508],[90.4127006,23.7049822],[90.4127085,23.705029],[90.4127207,23.7050785],[90.4127246,23.7050955],[90.4127345,23.7051483],[90.4127508,23.7052241],[90.4127603,23.7052555],[90.4127711,23.7053307],[90.4127796,23.7054088],[90.4127888,23.705465],[90.4127933,23.705465],[90.4128081,23.7054693],[90.4128167,23.7054756],[90.4128193,23.7054829],[90.412819,23.7054911],[90.4128136,23.7055028],[90.4128027,23.7055159],[90.4127805,23.7055161],[90.4127087,23.7055189],[90.4126053,23.705519],[90.4125385,23.7055199],[90.4124953,23.70552],[90.412444,23.7055201]]]]}},{"type":"Feature","properties":{"FID":"37","M_District":"Dhaka","Upazila_PS":"Sutrapur Thana","M_Thana":"Sutrapur","M_U_P_CC":"Dhaka South City Corporation","M_Ward":"DSCC_Ward-47","Mauza":"Sutrapur","JL_No":"003","Sheet_No":"13","Plot_No":"13232","M_JL_S":"Sutrapur_003_13","JL_Sh_Plot":"003_13_13232","Mz_Ver":"RS","Plot_Type":"Plot","Area_katha":"9.74009","Remarks_1":"","Cur_Use":"Vacant","Suit":"High"},"geometry":{"type":"MultiPolygon","coordinates":[[[[90.4238903,23.6960682],[90.4238825,23.6960809],[90.4238434,23.6960698],[90.4237774,23.6960522],[90.4237496,23.6960447],[90.4237198,23.6960365],[90.4236315,23.69601],[90.4235891,23.6959968],[90.4236291,23.6958922],[90.4236759,23.6957765],[90.4237078,23.6957061],[90.4237847,23.6957391],[90.423865,23.6957706],[90.4239485,23.6958037],[90.4240147,23.6958402],[90.4240478,23.695858],[90.4240663,23.6958757],[90.4240404,23.695914],[90.4240144,23.6959534],[90.424003,23.695976],[90.4239844,23.6960041],[90.4239528,23.6960527],[90.4239358,23.6960813],[90.4238903,23.6960682]]]]}},{"type":"Feature","properties":{"FID":"38","M_District":"Dhaka","Upazila_PS":"Sutrapur Thana","M_Thana":"Sutrapur","M_U_P_CC":"Dhaka South City Corporation","M_Ward":"DSCC_Ward-46","Mauza":"Sutrapur","JL_No":"003","Sheet_No":"13","Plot_No":"12903","M_JL_S":"Sutrapur_003_13","JL_Sh_Plot":"003_13_12903","Mz_Ver":"RS","Plot_Type":"Plot","Area_katha":"12.7974","Remarks_1":"","Cur_Use":"Vacant","Suit":"Medium"},"geometry":{"type":"MultiPolygon","coordinates":[[[[90.4205528,23.6980726],[90.4205965,23.6981225],[90.4206513,23.6981775],[90.42069,23.698216],[90.4207251,23.6982534],[90.4207597,23.6982889],[90.4207856,23.6983185],[90.4208212,23.6983596],[90.4208809,23.6984315],[90.4209228,23.698484],[90.420945,23.698516],[90.4209693,23.698564],[90.4209144,23.6985704],[90.4208377,23.6985775],[90.420762,23.698584],[90.4206775,23.6985939],[90.4206201,23.6985962],[90.4205958,23.6986013],[90.4205505,23.6986044],[90.4205112,23.6986066],[90.4205052,23.698607],[90.4205056,23.6985565],[90.4205072,23.6985174],[90.4205054,23.6984584],[90.4205069,23.6984271],[90.4205094,23.6983859],[90.4205095,23.6983772],[90.4205102,23.6983187],[90.4205105,23.6982334],[90.4205114,23.6981616],[90.4205097,23.6980975],[90.4205088,23.6980346],[90.4205528,23.6980726]]]]}},{"type":"Feature","properties":{"FID":"39","M_District":"Dhaka","Upazila_PS":"Sutrapur Thana","M_Thana":"Sutrapur","M_U_P_CC":"Dhaka South City Corporation","M_Ward":"DSCC_Ward-46","Mauza":"Sutrapur","JL_No":"003","Sheet_No":"13","Plot_No":"12901","M_JL_S":"Sutrapur_003_13","JL_Sh_Plot":"003_13_12901","Mz_Ver":"RS","Plot_Type":"Plot","Area_katha":"17.0254","Remarks_1":"","Cur_Use":"Vacant","Suit":"Medium"},"geometry":{"type":"MultiPolygon","coordinates":[[[[90.4210492,23.6989526],[90.4209613,23.6989509],[90.4209103,23.6989498],[90.4207855,23.6989473],[90.420656,23.6989454],[90.4205351,23.698943],[90.4205129,23.6989426],[90.4205046,23.6989424],[90.4205085,23.6988759],[90.4205095,23.6988275],[90.420509,23.6987827],[90.4205058,23.6987507],[90.420508,23.6986874],[90.4205085,23.6986305],[90.4205052,23.698607],[90.4205112,23.6986066],[90.4205505,23.6986044],[90.4205958,23.6986013],[90.4206201,23.6985962],[90.4206775,23.6985939],[90.420762,23.698584],[90.4208377,23.6985775],[90.4209144,23.6985704],[90.4209693,23.698564],[90.4210255,23.698661],[90.4210339,23.6986828],[90.4210619,23.6987469],[90.4209983,23.6987742],[90.4209522,23.6987964],[90.4209775,23.6988548],[90.4209994,23.6988957],[90.421108,23.6988497],[90.421134,23.6988993],[90.4211568,23.6989505],[90.4211458,23.698951],[90.4210492,23.6989526]]]]}}]};
+const COL={High:'#4CE600',Medium:'#FFAA00',Low:'#FF0000'};
+const LABEL_ZOOM=15;
+const map=L.map('map',{zoomControl:false,preferCanvas:false});
+L.control.zoom({position:'topright'}).addTo(map);
+L.control.scale({imperial:false,position:'bottomright'}).addTo(map);
+const gOpt={maxZoom:22,maxNativeZoom:21,subdomains:['mt0','mt1','mt2','mt3'],attribution:'Map data &copy; Google'};
+const gStreet=L.tileLayer('https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}',gOpt);
+const gSat=L.tileLayer('https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}',gOpt);
+const gHyb=L.tileLayer('https://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}',gOpt);
+const osm=L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:22,maxNativeZoom:19,attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'});
+const carto=L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{maxZoom:22,maxNativeZoom:20,subdomains:'abcd',attribution:'&copy; OpenStreetMap contributors &copy; CARTO'});
+const sat=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:22,maxNativeZoom:19,attribution:'Imagery &copy; Esri'});
+const none=L.layerGroup();
+const bases={'Google Streets':gStreet,'Google Satellite':gSat,'Google Hybrid':gHyb,'OpenStreetMap':osm,'CartoDB Positron':carto,'Esri World Imagery':sat,'No basemap':none};
+gStreet.addTo(map);
+L.control.layers(bases,null,{position:'topright'}).addTo(map);
+map.on('baselayerchange',e=>document.body.classList.toggle('sat',/Satellite|Imagery/.test(e.name)));
+// If basemap tiles are blocked (e.g. inside a sandboxed host), fall back quietly
+let tileErr=0,tileOk=0;
+[gStreet,gSat,gHyb,osm,carto,sat].forEach(t=>{t.on('tileerror',()=>{tileErr++;check()});t.on('tileload',()=>{tileOk++})});
+function check(){if(tileErr>=6&&tileOk===0){map.eachLayer(l=>{if(l instanceof L.TileLayer)map.removeLayer(l)});none.addTo(map);
+ document.getElementById('msg').textContent='Basemap tiles could not load here; showing plots only.';}}
+const total=DATA.features.length;document.getElementById('total').textContent=total;
+const counts={High:0,Medium:0,Low:0};DATA.features.forEach(f=>counts[f.properties.Suit]=(counts[f.properties.Suit]||0)+1);
+Object.keys(counts).forEach(k=>{const e=document.getElementById('n-'+k);if(e)e.textContent=counts[k]});
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const FIELDS=[['Mauza','Mauza'],['JL_No','JL No'],['Sheet_No','Sheet No'],['Plot_No','Plot No'],['Mz_Ver','Survey'],['Area_katha','Area (katha)'],['Cur_Use','Current use'],['M_Thana','Thana'],['Upazila_PS','Upazila/PS'],['M_U_P_CC','Union/CC'],['M_Ward','Ward'],['M_District','District'],['Remarks_1','Remarks']];
+function popup(p){const c=COL[p.Suit]||'#888';
+ let rows=FIELDS.filter(([k])=>p[k]!==undefined&&p[k]!=='').map(([k,n])=>`<tr><td>${n}</td><td>${esc(k==='Area_katha'?(+p[k]).toFixed(2):p[k])}</td></tr>`).join('');
+ return `<div class="pop"><h3>${esc(p.JL_Sh_Plot)}</h3><div style="margin-bottom:6px"><span class="badge" style="border-color:${c}">${esc(p.Suit)} suitability</span></div><table>${rows}</table></div>`;}
+const byId={};const polys={High:L.featureGroup(),Medium:L.featureGroup(),Low:L.featureGroup()};
+const dots={High:L.featureGroup(),Medium:L.featureGroup(),Low:L.featureGroup()};
+DATA.features.forEach(f=>{const p=f.properties,c=COL[p.Suit]||'#888';
+ const lyr=L.geoJSON(f,{style:{color:c,weight:3,opacity:1,fillColor:c,fillOpacity:0.08}});
+ lyr.bindPopup(popup(p),{maxWidth:300});
+ lyr.bindTooltip(esc(p.JL_Sh_Plot),{permanent:true,direction:'center',className:'plot-label'});
+ lyr.addTo(polys[p.Suit]);
+ const ctr=lyr.getBounds().getCenter();
+ const d=L.circleMarker(ctr,{radius:6,color:c,weight:3,fillColor:'#fff',fillOpacity:0.9}).bindPopup(popup(p),{maxWidth:300}).bindTooltip(esc(p.JL_Sh_Plot),{direction:'top',offset:[0,-6]});
+ d.addTo(dots[p.Suit]);
+ byId[String(p.JL_Sh_Plot).toLowerCase()]={lyr,p};
+});
+const all=L.featureGroup(Object.values(polys));
+function fitAll(){map.fitBounds(all.getBounds(),{padding:[40,40]})}
+fitAll();
+function active(s){return document.querySelector(`input[data-s="${s}"]`).checked}
+function refresh(){const z=map.getZoom();const showLbl=document.getElementById('lbl').checked&&z>=LABEL_ZOOM;
+ Object.keys(polys).forEach(s=>{const on=active(s);
+  if(on)polys[s].addTo(map);else map.removeLayer(polys[s]);
+  if(on&&z<LABEL_ZOOM)dots[s].addTo(map);else map.removeLayer(dots[s]);
+  polys[s].eachLayer(g=>g.eachLayer(l=>{if(showLbl)l.openTooltip();else l.closeTooltip()}));});}
+map.on('zoomend',refresh);
+document.querySelectorAll('input[data-s]').forEach(i=>i.addEventListener('change',refresh));
+document.getElementById('lbl').addEventListener('change',refresh);
+document.getElementById('fit').addEventListener('click',fitAll);
+function find(){const v=document.getElementById('q').value.trim().toLowerCase();const m=document.getElementById('msg');if(!v)return;
+ let hit=byId[v];if(!hit){const k=Object.keys(byId).find(k=>k.includes(v));hit=k&&byId[k];}
+ if(!hit){m.textContent='No plot matches “'+v+'”.';return}
+ m.textContent='';const s=hit.p.Suit;const box=document.querySelector(`input[data-s="${s}"]`);if(!box.checked){box.checked=true;}
+ map.fitBounds(hit.lyr.getBounds(),{maxZoom:18});setTimeout(()=>{refresh();hit.lyr.openPopup()},350);}
+document.getElementById('go').addEventListener('click',find);
+document.getElementById('q').addEventListener('keydown',e=>{if(e.key==='Enter')find()});
+const panel=document.getElementById('panel');
+document.getElementById('collapse').addEventListener('click',e=>{panel.classList.toggle('min');e.target.textContent=panel.classList.contains('min')?'+':'–'});
+setTimeout(refresh,0);
+</script>
+</body></html>
