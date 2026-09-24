@@ -690,6 +690,15 @@ body{background:var(--bg);color:var(--ink);font-family:"Public Sans",system-ui,-
 .search{margin-top:12px;display:flex;gap:6px}
 .search input{flex:1;min-width:0;font:inherit;font-size:13.5px;padding:7px 9px;border:1px solid var(--line);border-radius:6px;background:transparent;color:var(--ink)}
 .search button,.tog{font:inherit;font-size:13px;padding:7px 10px;border:1px solid var(--accent);background:var(--accent);color:#fff;border-radius:6px;cursor:pointer}
+.search{position:relative}
+.sugg{position:absolute;left:0;right:0;top:100%;margin-top:4px;background:var(--panel);border:1px solid var(--line);border-radius:6px;
+ box-shadow:0 4px 12px rgba(0,0,0,.18);max-height:240px;overflow-y:auto;z-index:1100;display:none;padding:4px 0;list-style:none;margin-left:0}
+.sugg.open{display:block}
+.sugg li{display:flex;align-items:center;gap:8px;padding:6px 10px;font-size:13.5px;cursor:pointer}
+.sugg li[aria-selected="true"],.sugg li:hover{background:rgba(15,107,92,.12)}
+.sugg .d{width:10px;height:10px;border-radius:50%;border:2px solid;flex:none}
+.sugg .m{margin-left:auto;color:var(--muted);font-size:12px;white-space:nowrap}
+.sugg b{font-weight:700}
 .row{display:flex;align-items:center;justify-content:space-between;margin-top:10px;font-size:13px}
 .row label{display:flex;gap:6px;align-items:center;cursor:pointer}
 .msg{font-size:12px;color:var(--muted);margin-top:8px;min-height:1em}
@@ -718,7 +727,7 @@ body{background:var(--bg);color:var(--ink);font-family:"Public Sans",system-ui,-
  <label class="leg"><input type="checkbox" data-s="High" checked><span class="sw" style="border-color:var(--high)"></span>High<span class="n" id="n-High"></span></label>
  <label class="leg"><input type="checkbox" data-s="Medium" checked><span class="sw" style="border-color:var(--med)"></span>Medium<span class="n" id="n-Medium"></span></label>
  <label class="leg"><input type="checkbox" data-s="Low" checked><span class="sw" style="border-color:var(--low)"></span>Low<span class="n" id="n-Low"></span></label>
- <div class="search"><input id="q" placeholder="Find JL_Sh_Plot, e.g. 250_02_977" aria-label="Search plot"><button id="go">Go</button></div>
+ <div class="search"><input id="q" placeholder="Find JL_Sh_Plot, e.g. 250_02_977" aria-label="Search plot" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="sugg" aria-autocomplete="list"><ul class="sugg" id="sugg" role="listbox"></ul><button id="go">Go</button></div>
  <div class="row"><label><input type="checkbox" id="lbl" checked> Show labels</label><button class="tog" id="fit" style="background:transparent;color:var(--accent)">Zoom to all</button></div>
  <div class="msg" id="msg"></div>
  </div>
@@ -781,13 +790,36 @@ map.on('zoomend',refresh);
 document.querySelectorAll('input[data-s]').forEach(i=>i.addEventListener('change',refresh));
 document.getElementById('lbl').addEventListener('change',refresh);
 document.getElementById('fit').addEventListener('click',fitAll);
-function find(){const v=document.getElementById('q').value.trim().toLowerCase();const m=document.getElementById('msg');if(!v)return;
- let hit=byId[v];if(!hit){const k=Object.keys(byId).find(k=>k.includes(v));hit=k&&byId[k];}
- if(!hit){m.textContent='No plot matches “'+v+'”.';return}
- m.textContent='';const s=hit.p.Suit;const box=document.querySelector(`input[data-s="${s}"]`);if(!box.checked){box.checked=true;}
+const qEl=document.getElementById('q'),sg=document.getElementById('sugg'),msgEl=document.getElementById('msg');
+const ALL=Object.values(byId).sort((x,y)=>String(x.p.JL_Sh_Plot).localeCompare(String(y.p.JL_Sh_Plot),undefined,{numeric:true}));
+let cur=[],sel=-1;
+function goTo(hit){msgEl.textContent='';closeS();qEl.value=hit.p.JL_Sh_Plot;
+ const box=document.querySelector(`input[data-s="${hit.p.Suit}"]`);box.checked=true;
  map.fitBounds(hit.lyr.getBounds(),{maxZoom:18});setTimeout(()=>{refresh();hit.lyr.openPopup()},350);}
+function closeS(){sg.classList.remove('open');qEl.setAttribute('aria-expanded','false');sel=-1;}
+function hl(t,v){const i=t.toLowerCase().indexOf(v);if(i<0||!v)return esc(t);return esc(t.slice(0,i))+'<b>'+esc(t.slice(i,i+v.length))+'</b>'+esc(t.slice(i+v.length));}
+function renderS(){const v=qEl.value.trim().toLowerCase();
+ cur=v?ALL.filter(h=>String(h.p.JL_Sh_Plot).toLowerCase().includes(v)||String(h.p.Mauza||'').toLowerCase().includes(v)):ALL;
+ if(v)cur=[...cur.filter(h=>String(h.p.JL_Sh_Plot).toLowerCase().startsWith(v)),...cur.filter(h=>!String(h.p.JL_Sh_Plot).toLowerCase().startsWith(v))];
+ sel=-1;
+ if(!cur.length){sg.innerHTML='<li style="cursor:default;color:var(--muted)">No matching plot</li>';}
+ else sg.innerHTML=cur.map((h,i)=>`<li role="option" id="o${i}" data-i="${i}"><span class="d" style="border-color:${COL[h.p.Suit]}"></span>${hl(String(h.p.JL_Sh_Plot),v)}<span class="m">${esc(h.p.Mauza)}</span></li>`).join('');
+ sg.classList.add('open');qEl.setAttribute('aria-expanded','true');}
+function mark(){sg.querySelectorAll('li[data-i]').forEach(li=>li.setAttribute('aria-selected',li.dataset.i==sel?'true':'false'));
+ const e=document.getElementById('o'+sel);if(e){e.scrollIntoView({block:'nearest'});qEl.setAttribute('aria-activedescendant','o'+sel);}}
+qEl.addEventListener('input',renderS);
+qEl.addEventListener('focus',renderS);
+qEl.addEventListener('keydown',e=>{
+ if(e.key==='ArrowDown'){e.preventDefault();if(!sg.classList.contains('open'))renderS();sel=Math.min(sel+1,cur.length-1);mark();}
+ else if(e.key==='ArrowUp'){e.preventDefault();sel=Math.max(sel-1,0);mark();}
+ else if(e.key==='Enter'){e.preventDefault();if(sel>=0&&cur[sel])goTo(cur[sel]);else find();}
+ else if(e.key==='Escape')closeS();});
+sg.addEventListener('mousedown',e=>{const li=e.target.closest('li[data-i]');if(li){e.preventDefault();goTo(cur[+li.dataset.i]);}});
+document.addEventListener('click',e=>{if(!e.target.closest('.search'))closeS();});
+function find(){const v=qEl.value.trim().toLowerCase();if(!v)return;
+ let hit=byId[v];if(!hit){const k=Object.keys(byId).find(k=>k.includes(v));hit=k&&byId[k];}
+ if(!hit){msgEl.textContent='No plot matches “'+v+'”.';closeS();return}goTo(hit);}
 document.getElementById('go').addEventListener('click',find);
-document.getElementById('q').addEventListener('keydown',e=>{if(e.key==='Enter')find()});
 const panel=document.getElementById('panel');
 document.getElementById('collapse').addEventListener('click',e=>{panel.classList.toggle('min');e.target.textContent=panel.classList.contains('min')?'+':'–'});
 setTimeout(refresh,0);
