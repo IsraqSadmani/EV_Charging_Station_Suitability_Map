@@ -3,7 +3,7 @@
 An interactive web map showing khas land plots in Dhaka City identified as
 potential sites for electric vehicle (EV) charging stations.
 
-**Live map:** https://yourusername.github.io/ev-khas-land-map/
+**Live map:** [https://yourusername.github.io/ev-khas-land-map/](https://israqsadmani.github.io/EV_Charging_Station_Suitability_Map/)
 
 ## Suitability classes
 | Class  | Colour |
